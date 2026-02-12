@@ -10,18 +10,18 @@ import re
 # 📐 [FONT_CONFIG] - 글자 크기 설정
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      
-    "SIDEBAR_LINKS": "15px",   
-    "LOGOUT_BTN": "16px",      
-    "MAIN_TITLE": "32px",      
-    "CHARGE_BTN": "16px",      
-    "REMAIN_TITLE": "22px",    
-    "METRIC_LABEL": "16px",    
-    "METRIC_VALUE": "35px",    
-    "REGISTER_TITLE": "22px",  
-    "TABLE_HEADER": "15px",    
-    "TABLE_INPUT": "16px",     
-    "SUBMIT_BTN": "26px"       
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
+    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
+    "MAIN_TITLE": "32px",      # 메인 제목 크기
+    "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
+    "REMAIN_TITLE": "25px",    # '실시간 잔여 수량' 제목 크기
+    "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
+    "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
+    "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
+    "TABLE_HEADER": "25px",    # 입력창 상단 라벨 크기
+    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
+    "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기
 }
 
 ANNOUNCEMENTS = [
