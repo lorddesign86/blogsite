@@ -11,7 +11,7 @@ import re
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID
-    "SIDEBAR_LINKS": "15px",   # 사이드바 링크
+    "SIDEBAR_LINKS": "20px",   # 사이드바 링크
     "LOGOUT_BTN": "16px",      # 로그아웃 버튼
     "MAIN_TITLE": "32px",      # 메인 제목
     "CHARGE_BTN": "16px",      # 충전하기 버튼
@@ -20,12 +20,12 @@ FONT_CONFIG = {
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목
     "TABLE_HEADER": "15px",    # 입력창 상단 라벨
-    "INPUT_TEXT": "16px",      # 입력창 내부 글자
-    "SUBMIT_BTN": "26px"       # 작업넣기 버튼
+    "INPUT_TEXT": "25px",      # 입력창 내부 글자
+    "SUBMIT_BTN": "40px"       # 작업넣기 버튼
 }
 
 ANNOUNCEMENTS = [
-    {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
+    {"text": "📢 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
     {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
     {"text": "📢 스댓공 개별서비스", "url": "https://kmong.com/gig/445340"},
     {"text": "📢 방문자 서비스 보러가", "url": "https://caring-kayak-cd7.notion.site/27707671d021808a9567edb8ad065b28?source=copy_link"},
@@ -118,7 +118,7 @@ else:
             st.session_state.logged_in = False
             st.rerun()
         st.divider()
-        st.markdown("### 📢 서비스 링크")
+        st.markdown("### 👉 서비스 링크")
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
@@ -140,9 +140,9 @@ else:
         if user_row_idx != -1:
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
-            m_cols[0].metric("공감", f"{user_data[2]}개")
-            m_cols[1].metric("댓글", f"{user_data[3]}개")
-            m_cols[2].metric("스크랩", f"{user_data[4]}개")
+            m_cols[0].metric("공감", f"{user_data[2]}")
+            m_cols[1].metric("댓글", f"{user_data[3]}")
+            m_cols[2].metric("스크랩", f"{user_data[4]}")
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
@@ -151,7 +151,7 @@ else:
             # 폼을 사용하여 등록 후 즉시 초기화 구현
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
@@ -187,7 +187,7 @@ else:
                                     st.session_state.current_user,
                                     st.session_state.nickname
                                 ])
-                            st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
+                            st.success("🎊 작업 등록 완료! 순차적으로 시작됩니다.")
                             time.sleep(1)
                             st.rerun() # 폼 외부 데이터 동기화를 위해 재실행
                         else: st.error("❌ 잔여 수량 부족")
