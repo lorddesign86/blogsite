@@ -171,11 +171,11 @@ else:
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                    kw = r_col[0].text_input(f"키워드_{i}", label_visibility="collapsed", placeholder="(키워드)")
-                    url = r_col[1].text_input(f"URL_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
-                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    r = r_col[3].number_input(f"댓_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    s = r_col[4].number_input(f"스_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    kw = r_col[0].text_input(f"키워드_{i}", label_visibility="collapsed")
+                    url = r_col[1].text_input(f"URL_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
+                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="공감")
+                    r = r_col[3].number_input(f"댓_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="댓글")
+                    s = r_col[4].number_input(f"스_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="스크랩")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
