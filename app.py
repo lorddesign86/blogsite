@@ -95,7 +95,7 @@ if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
         with st.form("login_form"):
-            st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+            st.markdown("### 🛡️ 로그인")
             u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
             u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
             if st.form_submit_button("LOGIN"):
@@ -110,7 +110,7 @@ if not st.session_state.logged_in:
                             st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
                             st.rerun()
                     st.error("정보 불일치")
-                except Exception as e: st.error(f"연동 실패: {str(e)}")
+                except Exception as e: st.error(f"다시 로그인 버튼을 눌러주세요.: {str(e)}")
 else:
     # --- 2. 메인 앱 레이아웃 ---
     with st.sidebar:
@@ -126,8 +126,8 @@ else:
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
-            <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
-            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
+            <span class="main-title">🚀 {st.session_state.nickname}님의 작업등록</span>
+            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전요청하기</a>
         </div>
     """, unsafe_allow_html=True)
     
@@ -142,9 +142,9 @@ else:
             # 🚀 [복구됨] 실시간 잔여 수량 섹션
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
-            m_cols[0].metric("공감", f"{user_data[2]}개")
-            m_cols[1].metric("댓글", f"{user_data[3]}개")
-            m_cols[2].metric("스크랩", f"{user_data[4]}개")
+            m_cols[0].metric("공감", f"{user_data[2]}")
+            m_cols[1].metric("댓글", f"{user_data[3]}")
+            m_cols[2].metric("스크랩", f"{user_data[4]}")
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
@@ -152,13 +152,13 @@ else:
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-                for idx, label in enumerate(["키워드", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드(입력하지 않아도 됩니다)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-                    kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", placeholder="(키워드)")
-                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
+                    kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed")
+                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
                     # 수량 조절 버튼(+/-) 포함
                     l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
                     r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
@@ -175,7 +175,7 @@ else:
                                 st.session_state.current_user,
                                 st.session_state.nickname # H열 기록
                             ])
-                        st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
+                        st.success("🎊 작업 등록 완료!")
                         time.sleep(1)
                         st.rerun()
     except Exception as e: st.error(f"동기화 실패: {str(e)}")
