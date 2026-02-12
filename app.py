@@ -104,11 +104,16 @@ if not st.session_state.logged_in:
     with center_col:
         st.write("") # 상단 여백
         st.write("") 
-        with st.form("login_form"):
-            st.markdown("### 🛡️ 로그인")
-            u_id = st.text_input("ID", placeholder="아이디를 입력하세요")
-            u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요")
-            login_submitted = st.form_submit_button("LOGIN")
+with st.form("login_form"):
+    st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+    
+    # autocomplete="username" 추가
+    u_id = st.text_input("ID", placeholder="아이디를 입력하세요", autocomplete="username")
+    
+    # autocomplete="current-password" 추가
+    u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요", autocomplete="current-password")
+    
+    login_submitted = st.form_submit_button("LOGIN")
             
             if login_submitted:
                 try:
