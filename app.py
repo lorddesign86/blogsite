@@ -92,18 +92,25 @@ def reset_inputs():
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
 # --- 앱 실행 ---
+# --- 로그인 화면 로직 ---
 if not st.session_state.logged_in:
-    # 좌, 중, 우 비율을 설정하여 가운데(center_col)만 사용합니다.
-    _, center_col, _ = st.columns([1, 1.5, 1]) 
+    # 🚀 중앙 정렬을 위해 컬럼 배치 (좌, 중, 우 비율 설정)
+    _, center_col, _ = st.columns([1, 1.5, 1])
     
     with center_col:
-        st.write("") # 위쪽 여백용
+        st.write("") # 위쪽 여백
         with st.form("login_form"):
             st.markdown("### 🛡️ 파우쓰 관리자 로그인")
             u_id = st.text_input("ID")
             u_pw = st.text_input("PW", type="password")
-            if st.form_submit_button("LOGIN"):
-                # ... 기존 로그인 검증 로직 ...
+            login_submitted = st.form_submit_button("LOGIN")
+            
+            # ❗ 여기서부터 에러 지점입니다. 아래 try 블록 전체를 들여쓰기 해야 합니다.
+            if login_submitted:
+                try: # 이 줄부터 아래의 모든 내용은 if문 안에 포함되도록 들여쓰기 필수!
+                    client = get_gspread_client()
+                    sh = client.open("작업_관리_데이터베이스")
+                    # ... (이하 로그인 검증 코드)
         try:
             client = get_gspread_client()
             sh = client.open("작업_관리_데이터베이스")
