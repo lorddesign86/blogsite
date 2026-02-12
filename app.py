@@ -6,6 +6,18 @@ import pandas as pd
 import time
 import re
 
+# ==========================================
+# 📐 [글자 크기 설정 옵션] - 여기서 수정하세요!
+# ==========================================
+FONT_CONFIG = {
+    "TITLE_SIZE": "28px",      # 메인 타이틀 크기
+    "METRIC_LABEL": "14px",    # 잔여 수량 라벨 (공감, 댓글 등)
+    "METRIC_VALUE": "22px",    # 잔여 수량 숫자 크기
+    "INPUT_LABEL": "13px",     # 입력창 상단 헤더 (키워드, URL 등)
+    "INPUT_TEXT": "15px",      # 입력창 내부 글자 크기
+    "SUBMIT_BTN": "20px"       # 작업넣기 버튼 글자 크기
+}
+
 # --- 1. 기본 설정 및 문구 ---
 UI_TEXT = {
     "SUB_TITLE_REMAIN": "📊 실시간 잔여 수량",
@@ -26,40 +38,51 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 CSS (버튼 크기 및 위치 보정) ---
-st.markdown("""
+# --- 🎨 디자인 CSS (설정된 글자 크기 반영) ---
+st.markdown(f"""
     <style>
-    .main .block-container { padding-top: 2rem !important; }
+    .main .block-container {{ padding-top: 2rem !important; }}
     
-    /* 타이틀 및 충전하기 버튼 가로 정렬 */
-    .header-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-    .charge-link {
+    /* 타이틀 크기 */
+    h1 {{ font-size: {FONT_CONFIG['TITLE_SIZE']} !important; margin: 0; }}
+    
+    /* 헤더 및 버튼 정렬 */
+    .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }}
+    .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
         font-weight: bold; font-size: 14px;
-    }
+    }}
 
-    /* 숫자 카드(Metric) 디자인 */
-    [data-testid="stMetric"] { background-color: #1e2129; padding: 8px !important; border-radius: 10px; border: 1px solid #444; text-align: center; }
-    [data-testid="stMetricValue"] { font-size: 1.2rem !important; color: #00ff00; }
+    /* 잔여 수량(Metric) 디자인 및 글자 크기 */
+    [data-testid="stMetric"] {{ background-color: #1e2129; padding: 8px !important; border-radius: 10px; border: 1px solid #444; text-align: center; }}
+    [data-testid="stMetricLabel"] > div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
+    [data-testid="stMetricValue"] > div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 700 !important; color: #00ff00 !important; }}
 
-    /* 🔥 작업넣기 버튼 사이즈 키우기 */
-    div.stButton > button:first-child {
-        width: 200px !important;  /* 가로 길이 조절 */
-        height: 55px !important;  /* 세로 높이 조절 */
-        font-size: 20px !important; /* 글자 크기 조절 */
+    /* 입력창 헤더 캡션 크기 */
+    .stCaption {{ font-size: {FONT_CONFIG['INPUT_LABEL']} !important; color: #aaa; }}
+
+    /* 입력창 내부 텍스트 크기 */
+    .stTextInput input, .stNumberInput input {{ font-size: {FONT_CONFIG['INPUT_TEXT']} !important; }}
+
+    /* 🔥 작업넣기 버튼 디자인 */
+    div.stButton > button:first-child {{
+        width: 220px !important;
+        height: 60px !important;
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important;
         background-color: #FF4B4B !important;
         border-radius: 12px !important;
         font-weight: bold !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
+        margin-top: 10px;
+    }}
 
-    @media (max-width: 768px) {
-        div.stButton > button:first-child {
+    @media (max-width: 768px) {{
+        div.stButton > button:first-child {{
             position: fixed; bottom: 10px; left: 5%; right: 5%; width: 90% !important; z-index: 999;
-            height: 3.5rem !important;
-        }
-        .stTextInput, .stNumberInput { margin-bottom: -15px !important; }
+            height: 3.8rem !important;
+        }}
+        .stTextInput, .stNumberInput {{ margin-bottom: -15px !important; }}
     }
     </style>
     """, unsafe_allow_html=True)
@@ -77,7 +100,7 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 메인 레이아웃 ---
+# --- 메인 로직 ---
 if not st.session_state.logged_in:
     _, login_col, _ = st.columns([1, 2, 1])
     with login_col:
@@ -108,11 +131,11 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # 헤더 (타이틀 + 충전하기 버튼 가로 정렬)
+    # 헤더
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
-            <h1 style="margin:0;">🚀 {st.session_state.nickname} 작업등록</h1>
+            <h1>🚀 {st.session_state.nickname} 작업등록</h1>
             <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
         </div>
     """, unsafe_allow_html=True)
@@ -127,9 +150,9 @@ else:
         if user_row_idx != -1:
             st.write(UI_TEXT["SUB_TITLE_REMAIN"])
             m1, m2, m3, m4 = st.columns([1, 1, 1, 1.2])
-            m1.metric("공감", f"{user_data[2]}")
-            m2.metric("댓글", f"{user_data[3]}")
-            m3.metric("스크랩", f"{user_data[4]}")
+            m1.metric("공감", f"{user_data[2]}개")
+            m2.metric("댓글", f"{user_data[3]}개")
+            m3.metric("스크랩", f"{user_data[4]}개")
             m4.metric("접속ID", user_data[0])
             st.divider()
             
