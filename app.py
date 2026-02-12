@@ -96,17 +96,25 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.5, 1])
     with center_col:
-        with st.form("login_form"):
-            st.markdown("### 🛡️ 로그인")
-            u_id = st.text_input("ID")
-            u_pw = st.text_input("PW", type="password")
-            login_submitted = st.form_submit_button("LOGIN")
-            
-            if login_submitted:
-                try:
-                    # 💡 API 연결을 시도하기 전에 짧은 대기 시간을 주어 충돌을 방지합니다.
-                    time.sleep(0.5) 
-                    client = get_gspread_client()
+# 수정 전: 엔터 키가 작동하지 않는 구조
+# u_id = st.text_input("ID")
+# u_pw = st.text_input("PW", type="password")
+# if st.button("LOGIN"): ...
+
+# 수정 후: 엔터 키로 로그인이 가능한 구조
+with st.form("login_form"):
+    st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+    u_id = st.text_input("ID", placeholder="아이디를 입력하세요")
+    u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요")
+    
+    # ❗ 반드시 st.form_submit_button을 사용해야 엔터 키와 연결됩니다.
+    login_submitted = st.form_submit_button("LOGIN")
+    
+    if login_submitted:
+        # 로그인 검증 로직 시작 (들여쓰기 주의!)
+        try:
+            client = get_gspread_client()
+            # ... (이후 시트 연동 및 로그인 체크 코드)
                     sh = client.open("작업_관리_데이터베이스")
                     # ... 이하 기존 로직 ...
                 except Exception as e:
