@@ -152,9 +152,9 @@ else:
             # 3. 잔여 수량
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
-            m_cols[0].metric("공감", f"{user_data[2]}개")
-            m_cols[1].metric("댓글", f"{user_data[3]}개")
-            m_cols[2].metric("스크랩", f"{user_data[4]}개")
+            m_cols[0].metric("공감", f"{user_data[2]}")
+            m_cols[1].metric("댓글", f"{user_data[3]}")
+            m_cols[2].metric("스크랩", f"{user_data[4]}")
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
