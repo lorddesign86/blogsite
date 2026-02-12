@@ -4,65 +4,129 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import pandas as pd
 
-# --- 구글 시트 연결 ---
+# 페이지 설정
+st.set_page_config(page_title="작업 자동화 시스템", layout="wide")
+
+# 1. 로그인 세션 관리
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
 def get_gspread_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    # Streamlit Secrets에 저장된 정보를 불러옵니다.
     creds_dict = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
-st.set_page_config(page_title="작업 관리 대시보드", layout="wide")
-st.title("🚀 작업 자동화 시스템")
+# 메인 레이아웃
+col_login, col_main = st.columns([1, 4], gap="large")
 
-try:
-    client = get_gspread_client()
-    # 구글 스프레드시트 파일 이름 (정확히 일치해야 함)
-    sh = client.open("작업_관리_데이터베이스") 
-    acc_sheet = sh.worksheet("Accounts")
-    hist_sheet = sh.worksheet("History")
+# --- 왼쪽: 로그인 영역 ---
+with col_login:
+    st.subheader("🔒 로그인")
+    if not st.session_state.logged_in:
+        user_id = st.text_input("아이디", key="login_id")
+        user_pw = st.text_input("비밀번호", type="password", key="login_pw")
+        if st.button("로그인", use_container_width=True):
+            if user_id == "admin" and user_pw == "1234": # 원하는 비번으로 수정
+                st.session_state.logged_in = True
+                st.rerun()
+            else:
+                st.error("불일치")
+    else:
+        st.success("✅ 인증됨 (admin)")
+        if st.button("로그아웃", use_container_width=True):
+            st.session_state.logged_in = False
+            st.rerun()
 
-    # 사이드바 입력창
-    with st.sidebar:
-        st.header("📝 새 작업 등록")
-        keyword = st.text_input("키워드")
-        link = st.text_input("링크")
-        c1, c2, c3 = st.columns(3)
-        l_cnt = c1.number_input("공감", min_value=0, step=1)
-        r_cnt = c2.number_input("댓글", min_value=0, step=1)
-        s_cnt = c3.number_input("스크랩", min_value=0, step=1)
-        btn = st.button("등록하기", use_container_width=True)
+# --- 오른쪽: 작업 입력 영역 ---
+with col_main:
+    st.title("🚀 작업 자동화 시스템")
+    
+    if not st.session_state.logged_in:
+        st.info("왼쪽에서 로그인을 먼저 진행해주세요.")
+    else:
+        try:
+            client = get_gspread_client()
+            sh = client.open("작업_관리_데이터베이스")
+            acc_sheet = sh.worksheet("Accounts")
+            hist_sheet = sh.worksheet("History")
 
-    # 데이터 표시
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("📊 계정 잔여 수량")
-        acc_df = pd.DataFrame(acc_sheet.get_all_records())
-        st.table(acc_df)
-    with col2:
-        st.subheader("📜 최근 내역")
-        hist_df = pd.DataFrame(hist_sheet.get_all_records())
-        st.dataframe(hist_df.tail(15))
+            # 실시간 현황 표 표시
+            with st.expander("📊 현재 계정 잔여 수량 보기", expanded=True):
+                acc_df = pd.DataFrame(acc_sheet.get_all_records())
+                st.dataframe(acc_df, use_container_width=True)
 
-    # 등록 버튼 클릭 시 로직
-    if btn:
-        if not keyword or not link:
-            st.error("키워드와 링크를 입력해주세요.")
-        else:
-            success = False
-            for i, row in acc_df.iterrows():
-                if row['잔여_공감'] >= l_cnt and row['잔여_댓글'] >= r_cnt and row['잔여_스크랩'] >= s_cnt:
-                    # 차감 업데이트
-                    acc_sheet.update_cell(i+2, 2, int(row['잔여_공감'] - l_cnt))
-                    acc_sheet.update_cell(i+2, 3, int(row['잔여_댓글'] - r_cnt))
-                    acc_sheet.update_cell(i+2, 4, int(row['잔여_스크랩'] - s_cnt))
-                    # 내역 추가
-                    hist_sheet.append_row([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), keyword, link, l_cnt, r_cnt, s_cnt, row['ID']])
-                    st.success(f"✅ {row['ID']} 계정으로 등록 완료!")
-                    success = True
-                    st.rerun()
-                    break
-            if not success:
-                st.error("❌ 수량이 충분한 계정이 없습니다.")
-except Exception as e:
-    st.info("구글 시트 연결 대기 중입니다. Streamlit Cloud의 Secrets 설정을 완료해주세요.")
+            st.divider()
+            st.subheader("📝 일괄 작업 등록 (최대 10행)")
+            
+            # 10개 행 입력을 위한 리스트
+            rows_data = []
+            
+            # 헤더 라인
+            h_col = st.columns([1.5, 2.5, 0.8, 0.8, 0.8])
+            h_col[0].caption("키워드")
+            h_col[1].caption("링크")
+            h_col[2].caption("공감")
+            h_col[3].caption("댓글")
+            h_col[4].caption("스크랩")
+
+            # 10개 행 생성
+            for i in range(10):
+                r_col = st.columns([1.5, 2.5, 0.8, 0.8, 0.8])
+                kw = r_col[0].text_input(f"kw_{i}", label_visibility="collapsed")
+                link = r_col[1].text_input(f"link_{i}", label_visibility="collapsed")
+                l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
+                r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
+                s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
+                
+                if kw and link: # 키워드와 링크가 입력된 행만 추출
+                    rows_data.append({"kw": kw, "link": link, "l": l, "r": r, "s": s})
+
+            st.write("")
+            if st.button("🔥 전체 등록하기", type="primary", use_container_width=True):
+                if not rows_data:
+                    st.warning("입력된 데이터가 없습니다.")
+                else:
+                    with st.spinner("구글 시트에 기록 중..."):
+                        acc_df = pd.DataFrame(acc_sheet.get_all_records())
+                        process_count = 0
+                        
+                        for data in rows_data:
+                            success = False
+                            for idx, acc in acc_df.iterrows():
+                                # 수량 체크
+                                if (acc['잔여_공감'] >= data['l'] and 
+                                    acc['잔여_댓글'] >= data['r'] and 
+                                    acc['잔여_스크랩'] >= data['s']):
+                                    
+                                    # 시트 차감 업데이트
+                                    row_num = idx + 2
+                                    acc_sheet.update_cell(row_num, 2, int(acc['잔여_공감'] - data['l']))
+                                    acc_sheet.update_cell(row_num, 3, int(acc['잔여_댓글'] - data['r']))
+                                    acc_sheet.update_cell(row_num, 4, int(acc['잔여_스크랩'] - data['s']))
+                                    
+                                    # 내역 기록
+                                    hist_sheet.append_row([
+                                        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                        data['kw'], data['link'], data['l'], data['r'], data['s'], acc['ID']
+                                    ])
+                                    
+                                    # 메모리 상의 데이터도 업데이트 (다음 행 처리를 위해)
+                                    acc_df.at[idx, '잔여_공감'] -= data['l']
+                                    acc_df.at[idx, '잔여_댓글'] -= data['r']
+                                    acc_df.at[idx, '잔여_스크랩'] -= data['s']
+                                    
+                                    success = True
+                                    process_count += 1
+                                    break
+                            
+                            if not success:
+                                st.error(f"❌ '{data['kw']}' 작업: 잔여 수량이 부족한 계정이 없습니다.")
+                        
+                        if process_count > 0:
+                            st.success(f"✅ 총 {process_count}건의 작업이 성공적으로 등록되었습니다!")
+                            st.rerun()
+
+        except Exception as e:
+            st.error(f"연결 오류: {e}")
+            st.info("구글 시트의 탭 이름(Accounts, History)과 헤더를 확인해주세요.")
