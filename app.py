@@ -7,7 +7,7 @@ import time
 import re
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 요청하신 폰트 설정 적용
+# 📐 [FONT_CONFIG] - 요청하신 최신 설정 적용
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
@@ -39,24 +39,18 @@ st.set_page_config(page_title="파우쓰", layout="wide")
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
-    
-    /* "Press Enter..." 안내 문구 숨기기 */
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
     small {{ display: none !important; }}
-
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
-    
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
         font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
     }}
-
     div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
     [data-testid="stMetric"] {{
         background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
@@ -65,10 +59,8 @@ st.markdown(f"""
     }}
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
-
     div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important; height: 75px !important;
         background-color: #FF4B4B !important; border-radius: 15px !important;
@@ -159,33 +151,38 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
-                # --- 작업 등록 및 이중 시트 기록 로직 ---
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
                     rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
-                        with st.spinner("두 시트에 기록 중..."):
+                        with st.spinner("수량 차감 및 시트 기록 중..."):
                             try:
-                                # 외부 출력용 시트 열기
-                                target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
-                                target_work_sheet = target_sh.worksheet("작업")
-                                
-                                for d in rows_to_submit:
-                                    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                                    # 1. 기존 History 시트 기록
-                                    hist_sheet.append_row([
-                                        now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], 
-                                        st.session_state.current_user, st.session_state.nickname
-                                    ])
-                                    # 2. 외부 시트 기록 (열 위치 지정: C,D,E,F,G,I)
-                                    target_work_sheet.append_row([
-                                        "", "", now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname
-                                    ])
-                                
-                                st.success("🎊 모든 시트에 등록 완료!")
-                                time.sleep(1)
-                                st.rerun()
+                                # 1. 수량 계산 및 차감 로직
+                                total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
+                                rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
+
+                                if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                                    acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
+                                    acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
+                                    acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
+
+                                    # 2. 외부 "작업" 시트 연동 (ID: 1uqAHj...)
+                                    target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
+                                    target_work_sheet = target_sh.worksheet("작업")
+                                    
+                                    for d in rows_to_submit:
+                                        now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                        # 기존 History 기록
+                                        hist_sheet.append_row([now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
+                                        # 외부 시트 배치 (C:날짜, D:키워드, E:URL, F:공, G:댓, H:스, I:닉네임)
+                                        target_work_sheet.append_row(["", "", now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname])
+                                    
+                                    st.success("🎊 모든 시트에 등록 완료 및 수량이 차감되었습니다!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                else:
+                                    st.error("❌ 잔여 수량이 부족합니다.")
                             except Exception as ex:
-                                st.error(f"시트 기록 오류: {ex}")
+                                st.error(f"기록 실패: {ex}")
     except Exception as e: st.error(f"동기화 실패: {e}")
