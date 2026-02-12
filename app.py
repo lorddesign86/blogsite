@@ -24,7 +24,7 @@ FONT_CONFIG = {
     "SUBMIT_BTN": "26px"       # 작업넣기 버튼 글자 크기
 }
 
-# --- 📢 서비스 링크 (변수 누락 에러 방지) ---
+# --- 📢 서비스 링크 ---
 ANNOUNCEMENTS = [
     {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
     {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
@@ -161,6 +161,7 @@ else:
                     elif l > 0 or r > 0 or s > 0:
                         rows_data.append({"kw": kw if kw else "", "link": url.strip(), "l": l, "r": r, "s": s})
 
+            # 🔥 등록 버튼
             if st.button("🔥 작업넣기", type="primary", key="submit_btn"):
                 if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
                 elif not rows_data: st.warning("⚠️ 등록할 데이터를 입력해주세요.")
@@ -172,16 +173,15 @@ else:
                             acc_sheet.update_cell(user_row_idx, 4, int(user_data[3]) - t_r)
                             acc_sheet.update_cell(user_row_idx, 5, int(user_data[4]) - t_s)
                             
-                            # [핵심] H열에 닉네임 추가 로직
                             for d in rows_data:
                                 hist_sheet.append_row([
                                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                                     d['kw'], d['link'], d['l'], d['r'], d['s'], 
                                     st.session_state.current_user,
-                                    st.session_state.nickname # H열에 들어갈 닉네임
+                                    st.session_state.nickname # H열 닉네임 자동 입력
                                 ])
-                            st.success("🎊 등록 완료!")
-                            time.sleep(1)
-                            st.rerun()
+                            st.success("🎊 등록 완료! 입력창이 초기화됩니다.")
+                            time.sleep(1.5) # 성공 메시지 보여줄 시간
+                            st.rerun() # [핵심] 등록 후 입력창 초기화를 위한 새로고침
                         else: st.error("❌ 잔여 수량 부족")
     except Exception: st.error("데이터 연동 실패")
