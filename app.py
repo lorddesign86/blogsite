@@ -156,9 +156,9 @@ else:
         if user_row_idx != -1:
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
-            m_cols[0].metric("공감", f"{user_data[2]}개")
-            m_cols[1].metric("댓글", f"{user_data[3]}개")
-            m_cols[2].metric("스크랩", f"{user_data[4]}개")
+            m_cols[0].metric("공감", f"{user_data[2]}")
+            m_cols[1].metric("댓글", f"{user_data[3]}")
+            m_cols[2].metric("스크랩", f"{user_data[4]}")
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
@@ -187,7 +187,7 @@ else:
                     if link_errors:
                         st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
                     elif not rows_to_submit:
-                        st.warning("⚠️ 데이터를 입력해주세요.")
+                        st.warning("⚠️ 링크와 수량을 입력해주세요.")
                     else:
                         with st.spinner("📦 처리 중..."):
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
@@ -206,10 +206,10 @@ else:
                                         st.session_state.current_user,
                                         st.session_state.nickname # H열에 닉네임 자동 기록
                                     ])
-                                st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
+                                st.success("🎊 작업 등록 완료!")
                                 time.sleep(1)
                                 st.rerun()
                             else:
-                                st.error("❌ 잔여 수량이 부족합니다.")
+                                st.error("❌ 잔여 수량이 부족합니다. 충전 후 이용해주세요.")
     except Exception as e:
         st.error(f"동기화 실패: {str(e)}")
