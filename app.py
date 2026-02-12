@@ -40,23 +40,15 @@ st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 120px !important; }}
     
-    /* 🚀 하단 작업넣기 버튼 고정 (모바일 대응) */
+    /* 🚀 하단 작업넣기 버튼 고정 (디자인 유지) */
     div.stButton > button:first-child[kind="primary"] {{
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90% !important;
-        max-width: 500px;
-        height: 85px !important;
-        background-color: #FF4B4B !important;
-        border-radius: 15px !important;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.6);
-        z-index: 9999;
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        width: 90% !important; max-width: 500px; height: 85px !important;
+        background-color: #FF4B4B !important; border-radius: 15px !important;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.6); z-index: 9999;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
-        font-weight: bold !important;
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: bold !important;
     }}
 
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
@@ -65,37 +57,22 @@ st.markdown(f"""
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
-    
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    
-    .charge-link {{
-        display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
-        color: white !important; text-decoration: none; border-radius: 8px;
-        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
-    }}
-
-    div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
-    [data-testid="stMetric"] {{
-        background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
-        padding: 15px 10px !important; min-height: 110px;
-        display: flex; flex-direction: column; justify-content: center;
-    }}
-    [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
-    [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    
+    [data-testid="stMetric"] {{ background-color: #1e2129; border-radius: 10px; border: 1px solid #444; padding: 15px 10px !important; }}
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수
+# 📢 텔레그램 알림 함수 (사용자님이 주신 값 직접 적용)
 def send_telegram_msg(message):
     try:
-        token = st.secrets["telegram"]["8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"]
-        chat_id = st.secrets["telegram"]["chat"]
-        url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={496784884}&text={message}"
-        requests.get(url)
+        # 사용자 제공 값 직접 입력
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
+        chat_id = "496784884"
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
 
 def get_gspread_client():
@@ -106,7 +83,6 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 1. 로그인 화면 ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
@@ -128,7 +104,6 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 2. 메인 앱 레이아웃 ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -154,7 +129,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
+            st.markdown(f"📊 실시간 잔여 수량")
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
             m_cols[1].metric("댓글", f"{user_data[3]}")
@@ -164,53 +139,50 @@ else:
 
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-                for idx, label in enumerate(["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
                     kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed")
-                    # 🚀 링크 입력 시 공백 자동 제거 반영
-                    u_raw = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
+                    u_raw = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
                     l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
                     r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    # 공백 자동 제거 반영
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
-
-                if submitted:
+                if st.form_submit_button("🔥 작업넣기", type="primary"):
                     rows_to_submit = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
-                        with st.spinner("처리 중..."):
-                            try:
-                                total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
-                                rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
+                        try:
+                            total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
+                            rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
-                                if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                                    # 1. 수량 차감
-                                    acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
-                                    acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
-                                    acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
+                            if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                                # 1. 수량 차감
+                                acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
+                                acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
+                                acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                                    # 2. 외부 시트 기록 (E열 기준 위치 찾기)
-                                    target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
-                                    target_ws = target_sh.worksheet("작업")
-                                    url_col = target_ws.col_values(5)
-                                    last_idx = len(url_col) + 1
-                                    
-                                    for i, d in enumerate(rows_to_submit):
-                                        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                                        hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
-                                        target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
-                                    
-                                    # 3. 텔레그램 푸시 알림
-                                    send_telegram_msg(f"🚀 [{st.session_state.nickname}] 작업 등록!\n공감:{total_l}, 댓글:{total_r}, 스크랩:{total_s}")
-                                    
-                                    st.success("🎊 모든 등록 완료!")
-                                    time.sleep(1)
-                                    st.rerun()
-                                else:
-                                    st.error("❌ 잔여 수량 부족")
-                            except Exception as ex: st.error(f"오류: {ex}")
+                                # 2. 외부 시트 기록 (E열 기준 위치 찾기)
+                                target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
+                                target_ws = target_sh.worksheet("작업")
+                                url_col = target_ws.col_values(5)
+                                last_idx = len(url_col) + 1
+                                
+                                for i, d in enumerate(rows_to_submit):
+                                    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                    hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
+                                    target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
+                                
+                                # 3. 텔레그램 알림 발송 (사용자 정보 기반)
+                                msg = f"🔔 [파우쓰] 신규 작업 등록!\n- 사용자: {st.session_state.nickname}\n- 수량: 공감 {total_l} / 댓글 {total_r} / 스크랩 {total_s}"
+                                send_telegram_msg(msg)
+                                
+                                st.success("🎊 등록 완료 및 알림 발송!")
+                                time.sleep(1)
+                                st.rerun()
+                            else: st.error("❌ 잔여 수량 부족")
+                        except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
