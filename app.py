@@ -7,29 +7,26 @@ import time
 import re
 
 # ==========================================
-# 📐 [글자 크기 통합 설정] - 여기서 자유롭게 수정하세요!
+# 📐 [글자 크기 통합 설정] - 숫자만 수정하세요!
 # ==========================================
-FONT_CONFIG = {
-    "SIDEBAR_ID": "30px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "13px",   # 사이드바 서비스 링크 크기
-    "MAIN_TITLE": "30px",      # 메인 제목 (바둥이 작업등록)
-    "CHARGE_BTN": "14px",      # 충전하기 버튼 글자 크기
-    "REMAIN_TITLE": "25px",    # '실시간 잔여 수량' 소제목 크기
-    "METRIC_LABEL": "20px",    # 잔여 수량 항목명 (공감, 댓글 등)
-    "METRIC_VALUE": "40px",    # 잔여 수량 숫자 크기
-    "INPUT_TITLE": "30px",     # '작업 일괄 등록' 소제목 크기
-    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 (키워드, URL 등)
-    "TABLE_INPUT": "15px",     # 입력창 내부 텍스트 크기
-    "SUBMIT_BTN": "40px",      # 작업넣기 버튼 글자 크기
-    "LOGOUT_BTN": "20px"       # 로그아웃 버튼 글자 크기
+폰트_설정 = {
+    "사이드바_사용자ID": "25px",   # 왼쪽 '바둥이님' 글자 크기
+    "사이드바_메뉴글자": "16px",   # 왼쪽 '서비스 링크' 등 메뉴 크기
+    "로그아웃_버튼": "16px",       # 왼쪽 'LOGOUT' 버튼 글자 크기
+    "메인_타이틀": "32px",         # 상단 '🚀 바둥이 작업등록' 크기
+    "충전하기_버튼": "16px",       # 타이틀 옆 '💰 충전하기' 버튼 크기
+    "실시간수량_제목": "22px",     # '📊 실시간 잔여 수량' 글자 크기
+    "수량항목_이름": "16px",       # '공감', '댓글', '스크랩' 글자 크기
+    "수량_숫자": "28px",           # 잔여 수량 숫자 크기
+    "작업등록_제목": "22px",       # '📝 작업 일괄 등록' 글자 크기
+    "입력창_상단라벨": "15px",     # 입력칸 위 '키워드', 'URL' 글자 크기
+    "입력창_내부글자": "16px",     # 실제 타자 치는 글자 크기
+    "작업넣기_버튼": "24px"        # 하단 '🔥 작업넣기' 대형 버튼 크기
 }
 
-# --- 1. 기본 설정 및 문구 ---
+# --- 기본 문구 설정 ---
 UI_TEXT = {
-    "SUB_TITLE_REMAIN": "📊 실시간 잔여 수량",
-    "SUB_TITLE_INPUT": "📝 작업 일괄 등록",
     "SUBMIT_BUTTON": "🔥 작업넣기",
-    "LOGIN_TITLE": "### 🛡️ 파우쓰 관리자",
     "SUCCESS_MSG": "🎊 모든 작업이 정상 등록되었습니다."
 }
 
@@ -44,55 +41,59 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 CSS (f-string 중괄호 에러 수정 완료) ---
+# --- 🎨 디자인 CSS (모든 영역 텍스트 강제 제어) ---
+# f-string 에러 방지를 위해 {{ }}를 사용하여 작성했습니다.
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
     
-    /* 사이드바 글자 크기 */
-    [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
-    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; }}
+    /* 1. 사이드바 텍스트 및 버튼 */
+    [data-testid="stSidebar"] {{ font-size: {폰트_설정['사이드바_메뉴글자']} !important; }}
+    .sidebar-id {{ font-size: {폰트_설정['사이드바_사용자ID']} !important; font-weight: bold; margin-bottom: 10px; }}
+    [data-testid="stSidebar"] button p {{ font-size: {폰트_설정['로그아웃_버튼']} !important; font-weight: bold !important; }}
 
-    /* 메인 타이틀 및 충전하기 버튼 */
+    /* 2. 메인 타이틀 및 충전하기 버튼 */
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
-    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; margin: 0; font-weight: bold; }}
+    .main-title {{ font-size: {폰트_설정['메인_타이틀']} !important; font-weight: bold; margin: 0; }}
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
-        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']};
+        font-weight: bold; font-size: {폰트_설정['충전하기_버튼']} !important;
     }}
 
-    /* 잔여 수량(Metric) 및 소제목 */
-    .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold; margin-bottom: 10px; }}
-    [data-testid="stMetric"] {{ background-color: #1e2129; padding: 10px !important; border-radius: 10px; border: 1px solid #444; text-align: center; }}
-    [data-testid="stMetricLabel"] > div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
-    [data-testid="stMetricValue"] > div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 700 !important; color: #00ff00 !important; }}
+    /* 3. 잔여 수량 섹션 */
+    .section-title {{ font-size: {폰트_설정['실시간수량_제목']} !important; font-weight: bold; margin-bottom: 15px; }}
+    [data-testid="stMetricLabel"] div {{ font-size: {폰트_설정['수량항목_이름']} !important; }}
+    [data-testid="stMetricValue"] div {{ 
+        font-size: {폰트_설정['수량_숫자']} !important; 
+        font-weight: 800 !important; color: #00ff00 !important; 
+    }}
+    [data-testid="stMetric"] {{ background-color: #1e2129; border-radius: 10px; border: 1px solid #444; }}
 
-    /* 작업 등록 섹션 및 입력창 */
-    .input-title {{ font-size: {FONT_CONFIG['INPUT_TITLE']} !important; font-weight: bold; margin-top: 20px; }}
-    .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
-    .stTextInput input, .stNumberInput input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
+    /* 4. 작업 등록 섹션 및 입력창 */
+    .register-title {{ font-size: {폰트_설정['작업등록_제목']} !important; font-weight: bold; margin-top: 25px; }}
+    .stCaption {{ font-size: {폰트_설정['입력창_상단라벨']} !important; color: #aaa !important; }}
+    input {{ font-size: {폰트_설정['입력창_내부글자']} !important; }}
 
-    /* 🔥 대형 작업넣기 버튼 */
-    div.stButton > button:first-child {{
+    /* 5. 🔥 작업넣기 버튼 대형화 */
+    div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important;
-        height: 65px !important;
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important;
+        height: 70px !important;
         background-color: #FF4B4B !important;
         border-radius: 15px !important;
-        font-weight: bold !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        margin-top: 20px;
+    }}
+    div.stButton > button:first-child[kind="primary"] p {{
+        font-size: {폰트_설정['작업넣기_버튼']} !important;
+        font-weight: bold !important;
     }}
 
-    /* 로그아웃 버튼 */
-    .logout-btn button {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; }}
-
     @media (max-width: 768px) {{
-        div.stButton > button:first-child {{
+        div.stButton > button:first-child[kind="primary"] {{
             position: fixed; bottom: 10px; left: 5%; right: 5%; width: 90% !important; z-index: 999;
             height: 4rem !important;
         }}
-        .header-wrapper {{ flex-direction: column; align-items: flex-start; gap: 10px; }}
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -110,11 +111,11 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 실행 로직 ---
+# --- 메인 로직 ---
 if not st.session_state.logged_in:
     _, login_col, _ = st.columns([1, 2, 1])
     with login_col:
-        st.markdown(UI_TEXT["LOGIN_TITLE"])
+        st.markdown("### 🛡️ 파우쓰 관리자 로그인")
         u_id = st.text_input("ID", key="l_id")
         u_pw = st.text_input("PW", type="password", key="l_pw")
         if st.button("LOGIN"):
@@ -128,22 +129,21 @@ if not st.session_state.logged_in:
                         st.session_state.logged_in, st.session_state.current_user = True, u_id
                         st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
                         st.rerun()
-                st.error("정보 불일치")
+                st.error("아이디 또는 비밀번호가 틀립니다.")
             except Exception: st.error("연결 오류")
 else:
+    # 사이드바 레이아웃
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
-        st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
         if st.button("LOGOUT"):
             st.session_state.logged_in = False
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
         st.divider()
         st.markdown("### 📢 서비스 링크")
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # 헤더
+    # 메인 헤더
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
@@ -160,7 +160,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f'<div class="remain-title">{UI_TEXT["SUB_TITLE_REMAIN"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="section-title">{UI_TEXT["SUB_TITLE_REMAIN"]}</div>', unsafe_allow_html=True)
             m1, m2, m3, m4 = st.columns([1, 1, 1, 1.2])
             m1.metric("공감", f"{user_data[2]}개")
             m2.metric("댓글", f"{user_data[3]}개")
@@ -168,7 +168,7 @@ else:
             m4.metric("접속ID", user_data[0])
             st.divider()
             
-            st.markdown(f'<div class="input-title">{UI_TEXT["SUB_TITLE_INPUT"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="register-title">{UI_TEXT["SUB_TITLE_INPUT"]}</div>', unsafe_allow_html=True)
             h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
             for i, txt in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[i].caption(txt)
 
@@ -176,17 +176,16 @@ else:
             for i in range(10):
                 r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
                 kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}", placeholder="(키워드)")
-                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}", placeholder="(URL 입력)")
+                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}", placeholder="(링크 필수)")
                 l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"l_{i}")
                 r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"r_{i}")
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"s_{i}")
                 
                 if url.strip():
-                    if not is_valid_naver_link(url): link_errors.append(f"{i+1}행")
+                    if not is_valid_naver_link(url): link_errors.append(f"{i+1}번")
                     elif l > 0 or r > 0 or s > 0:
                         rows_data.append({"kw": kw if kw else "", "link": url.strip(), "l": l, "r": r, "s": s})
 
-            st.markdown("<br>", unsafe_allow_html=True)
             if st.button(UI_TEXT["SUBMIT_BUTTON"], type="primary", key="submit_btn"):
                 if link_errors:
                     st.error(f"⚠️ {', '.join(link_errors)} 링크 오류: 네이버 블로그 형식이 아닙니다.")
