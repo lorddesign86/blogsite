@@ -35,7 +35,7 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (최종 설정 고유 유지) ---
+# --- 🎨 디자인 & 정렬 CSS (최종 설정 고유 유지 + 하단 버튼 고정) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
@@ -64,11 +64,11 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수 (요청하신 형식 반영)
+# 📢 텔레그램 알림 함수 (사용자 정보 직접 적용)
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
-        chat_id = "496784884" #
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
+        chat_id = "496784884"
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
@@ -81,6 +81,7 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
+# --- 1. 로그인 화면 (아이디 자동 완성 지원) ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
@@ -102,6 +103,7 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
+    # --- 2. 메인 앱 레이아웃 (디자인 고정) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -157,16 +159,18 @@ else:
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                             if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                                # 1. 시트 수량 차감
                                 acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                                 acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                 acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
+                                # 2. 외부 시트 기록
                                 target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                                 target_ws = target_sh.worksheet("작업")
                                 url_col = target_ws.col_values(5)
                                 last_idx = len(url_col) + 1
                                 
-                                # ✅ 텔레그램 알림용 링크 리스트 생성
+                                # ✅ 알림용 링크 리스트 생성
                                 url_list_str = "\n".join([f"- {d['url']}" for d in rows_to_submit])
                                 
                                 for i, d in enumerate(rows_to_submit):
@@ -174,7 +178,7 @@ else:
                                     hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                     target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
                                 
-                                # ✅ [요청 반영] 텔레그램 메시지 형식 변경
+                                # ✅ [요청 반영] 텔레그램 메시지 형식 (사용자/링크/수량)
                                 msg = (
                                     f"🔔 [신규 작업 알림]\n\n"
                                     f"👤 사용자 : {st.session_state.nickname}\n"
