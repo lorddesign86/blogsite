@@ -27,11 +27,11 @@ FONT_CONFIG = {
 # --- 📢 서비스 링크 ---
 ANNOUNCEMENTS = [
     {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
-    {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
-    {"text": "📢 스댓공 개별서비스", "url": "https://kmong.com/gig/445340"},
-    {"text": "📢 방문자 서비스 보러가", "url": "https://caring-kayak-cd7.notion.site/27707671d021808a9567edb8ad065b28?source=copy_link"},
-    {"text": "📢 이웃 서비스 100~700명", "url": "https://kmong.com/gig/668226"},
-    {"text": "📢 최적화 블로그리스트 추출프로그램", "url": "https://kmong.com/gig/725815"},
+    {"text": "👉 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
+    {"text": "👉 스댓공 개별서비스", "url": "https://kmong.com/gig/445340"},
+    {"text": "👉 방문자 서비스 보러가", "url": "https://caring-kayak-cd7.notion.site/27707671d021808a9567edb8ad065b28?source=copy_link"},
+    {"text": "👉 이웃 서비스 100~700명", "url": "https://kmong.com/gig/668226"},
+    {"text": "👉 최적화 블로그리스트 추출프로그램", "url": "https://kmong.com/gig/725815"},
 ]
 
 st.set_page_config(page_title="파우쓰", layout="wide")
@@ -142,7 +142,7 @@ else:
     st.markdown(f"""
         <div class="header-wrapper">
             <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
-            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
+            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전요청하기</a>
         </div>
     """, unsafe_allow_html=True)
     
@@ -166,7 +166,7 @@ else:
             
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드(입력하지 않아도 됩니다)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
