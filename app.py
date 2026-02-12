@@ -11,7 +11,7 @@ import re
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID
-    "SIDEBAR_LINKS": "20px",   # 사이드바 링크
+    "SIDEBAR_LINKS": "30px",   # 사이드바 링크
     "LOGOUT_BTN": "16px",      # 로그아웃 버튼
     "MAIN_TITLE": "32px",      # 메인 제목
     "CHARGE_BTN": "16px",      # 충전하기 버튼
@@ -19,8 +19,8 @@ FONT_CONFIG = {
     "METRIC_LABEL": "16px",    # 수량 항목 이름
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목
-    "TABLE_HEADER": "15px",    # 입력창 상단 라벨
-    "INPUT_TEXT": "25px",      # 입력창 내부 글자
+    "TABLE_HEADER": "20px",    # 입력창 상단 라벨
+    "INPUT_TEXT": "18px",      # 입력창 내부 글자
     "SUBMIT_BTN": "40px"       # 작업넣기 버튼
 }
 
