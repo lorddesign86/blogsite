@@ -56,11 +56,46 @@ with col_login:
             except Exception as e: st.error(f"Error: {e}")
     else:
         st.success(f"**{st.session_state.current_user}**님 환영합니다.")
-        st.info("자동관리, 방문자, 이웃서비스는 크몽에서 이용해주세요.")
+        st.info("자동관리, 방문자, 이웃서비스는 크몽에서 이용해주세요. https://kmong.com/@파우쓰 ")
         if st.button("LOGOUT"):
             st.session_state.logged_in = False
             st.session_state.current_user = None
             st.rerun()
+
+# --- 좌측 사이드: 로그인 섹션 ---
+
+with col_login:
+    # (중략: 로그인 성공 메시지 출력 부분 아래)
+    st.success(f"**{st.session_state.current_user}**님 환영합니다.")
+    
+    # --------------------------------------------------
+    # 🎁 [마케팅 배너 영역 시작]
+    # --------------------------------------------------
+    st.markdown("---")  # 구분선
+    st.markdown("### 📢 추천 서비스")
+
+    # 배너 1: 이미지 클릭 시 링크 이동
+    st.markdown(f'''
+        <a href="https://kmong.com/특정서비스1" target="_blank">
+            <img src="https://이미지주소1.png" width="100%" style="border-radius: 10px; margin-bottom: 10px;">
+        </a>
+    ''', unsafe_allow_html=True)
+
+    # 배너 2: 이미지 클릭 시 링크 이동
+    st.markdown(f'''
+        <a href="https://kmong.com/특정서비스2" target="_blank">
+            <img src="https://이미지주소2.png" width="100%" style="border-radius: 10px; margin-bottom: 10px;">
+        </a>
+    ''', unsafe_allow_html=True)
+
+    # 배너 3: 텍스트 형태의 공지나 링크가 필요한 경우
+    st.info("💡 [공지] 신규 서비스 출시! 확인해보세요.")
+    # --------------------------------------------------
+
+    if st.button("LOGOUT"):
+        st.session_state.logged_in = False
+        st.rerun()
+
 
 # --- 우측 메인: 대시보드 및 입력 섹션 ---
 with col_main:
@@ -148,7 +183,7 @@ with col_main:
                                 time.sleep(1) # 유저가 메시지를 볼 시간
                                 st.rerun()
                             else:
-                                st.error(f"❌ 잔여 수량이 부족합니다. 크몽에서 충전 후 이용해주세요.(필요 공감: {total_l}, 현재: {cur_l})")
+                                st.error(f"❌ 잔여 수량이 부족합니다. 크몽에서 충전 후 이용해주세요.(필요 공감: {total_l}, 현재: {cur_l}) kmong.com/@파우쓰 ")
             else:
                 st.error("사용자 정보를 찾을 수 없습니다.")
         except Exception as e:
