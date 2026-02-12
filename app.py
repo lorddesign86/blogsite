@@ -12,16 +12,16 @@ import re
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
     "SIDEBAR_LINKS": "15px",   # 사이드바 서비스 링크 글자 크기
-    "LOGOUT_BTN": "16px",      # 로그아웃 버튼 글자 크기
+    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
-    "CHARGE_BTN": "16px",      # 충전하기 버튼 글자 크기
+    "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
     "REMAIN_TITLE": "22px",    # '실시간 잔여 수량' 제목 크기
     "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
-    "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
+    "METRIC_VALUE": "45px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "15px",    # 입력창 상단 라벨 크기
+    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
-    "SUBMIT_BTN": "26px"       # 작업넣기 버튼 글자 크기   
+    "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기   
 }
 
 # --- 📢 서비스 링크 ---
