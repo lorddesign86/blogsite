@@ -7,7 +7,7 @@ import re
 import requests
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 사용자님 최종 설정 (절대 고정)
+# 📐 [FONT_CONFIG] - 사용자 최종 설정 (절대 고정)
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
@@ -35,63 +35,36 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (PC/모바일 버튼 대폭 확대 및 하단 고정) ---
+# --- 🎨 디자인 & 정렬 CSS (최종 설정 고유 유지) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
     
-    /* 🚀 [변경] PC 및 모바일 공통 하단 고정 버튼 사이즈 대폭 확대 */
+    /* 🚀 하단 작업넣기 버튼 고정 및 사이즈 확대 */
     div.stButton > button:first-child[kind="primary"] {{
-        position: fixed; 
-        bottom: 30px; 
-        left: 50%; 
-        transform: translateX(-50%);
-        width: 80% !important;     /* PC에서도 넓게 보이도록 조정 */
-        max-width: 800px;           /* PC 최대 너비 상향 */
-        height: 110px !important;   /* 버튼 높이 대폭 확대 */
-        background-color: #FF4B4B !important; 
-        border-radius: 20px !important;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-        z-index: 9999;
-        border: 3px solid white !important; /* 가독성을 위한 테두리 추가 */
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        width: 80% !important; max-width: 800px; height: 110px !important;
+        background-color: #FF4B4B !important; border-radius: 20px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 9999;
+        border: 3px solid white !important;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
-        font-weight: 900 !important;
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important;
         letter-spacing: 2px;
     }}
-
-    [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
-    small {{ display: none !important; }}
 
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
-    
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    
-    .charge-link {{
-        display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
-        color: white !important; text-decoration: none; border-radius: 8px;
-        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
-    }}
-
-    div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
-    [data-testid="stMetric"] {{
-        background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
-        padding: 15px 10px !important; min-height: 110px;
-        display: flex; flex-direction: column; justify-content: center;
-    }}
-    [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
-    [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    
+    [data-testid="stMetric"] {{ background-color: #1e2129; border-radius: 10px; border: 1px solid #444; padding: 15px 10px !important; }}
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수 (사용자 정보 고정)
+# 📢 텔레그램 알림 함수
 def send_telegram_msg(message):
     try:
         token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
@@ -108,13 +81,17 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
+# --- 1. 로그인 화면 (인식률 상향 버전) ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
-        with st.form("login_form"):
+        # ✅ [수정] 브라우저가 '로그인 폼'으로 인식하게 하는 구조
+        with st.form("login_form", clear_on_submit=False):
             st.markdown("### 🛡️ 로그인")
-            u_id = st.text_input("ID", placeholder="아이디")
-            u_pw = st.text_input("PW", type="password", placeholder="비밀번호")
+            # autocomplete="username"과 "current-password"를 명시해야 자동 완성이 잘 뜹니다.
+            u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
+            
             if st.form_submit_button("LOGIN"):
                 try:
                     client = get_gspread_client()
@@ -129,6 +106,7 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
+    # --- 2. 메인 앱 레이아웃 (이전과 동일) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -176,10 +154,7 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                # 🚀 하단 고정 버튼 (PC 너비 확장 및 높이 상향)
-                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
-
-                if submitted:
+                if st.form_submit_button("🔥 작업넣기", type="primary"):
                     rows_to_submit = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
                         try:
