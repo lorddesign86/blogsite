@@ -15,7 +15,7 @@ UI_TEXT = {
     "SUCCESS_MSG": "🎊 모든 작업이 정상 등록되었습니다."
 }
 
-# --- 📢 사이드바 공지 및 하이퍼링크 ---
+# --- 📢 사이드바 서비스 링크 ---
 ANNOUNCEMENTS = [
     {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
     {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
@@ -27,12 +27,31 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 기기별 맞춤형 CSS 보정 ---
+# --- 🎨 디자인 CSS (충전하기 버튼 스타일 포함) ---
 st.markdown("""
     <style>
     .main .block-container { padding-top: 2rem !important; }
+    
+    /* 숫자 카드(Metric) 디자인 */
     [data-testid="stMetric"] { background-color: #1e2129; padding: 8px !important; border-radius: 10px; border: 1px solid #444; text-align: center; }
     [data-testid="stMetricValue"] { font-size: 1.2rem !important; color: #00ff00; }
+
+    /* 충전하기 버튼 스타일 */
+    .charge-btn {
+        display: inline-block;
+        padding: 6px 14px;
+        background-color: #FF4B4B;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 14px;
+        margin-left: 15px;
+        vertical-align: middle;
+    }
+    .charge-btn:hover { background-color: #e63939; }
+
+    /* 모바일 하단 고정 버튼 */
     @media (max-width: 768px) {
         div.stButton > button:first-child {
             position: fixed; bottom: 10px; left: 5%; right: 5%; width: 90%; z-index: 999;
@@ -44,15 +63,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🔗 링크 검증 함수 추가 ---
+# 링크 검증 함수
 def is_valid_naver_link(url):
-    # 네이버 블로그 PC/모바일 기본 도메인 + 아이디 + 게시글번호 형식 검증
     pattern = r'^https?://(m\.)?blog\.naver\.com/[\w-]+/\d+$'
     return re.match(pattern, url.strip()) is not None
-
-# 세션 관리
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'current_user' not in st.session_state: st.session_state.current_user = None
 
 def get_gspread_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -60,7 +74,9 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
-# 메인 레이아웃 구성
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+
+# --- 메인 레이아웃 구성 ---
 if not st.session_state.logged_in:
     _, login_col, _ = st.columns([1, 2, 1])
     with login_col:
@@ -75,14 +91,13 @@ if not st.session_state.logged_in:
                 all_vals = acc_sheet.get_all_values()
                 for row in all_vals[1:]:
                     if len(row) >= 2 and str(row[0]) == u_id and str(row[1]) == u_pw:
-                        st.session_state.logged_in = True
-                        st.session_state.current_user = u_id
+                        st.session_state.logged_in, st.session_state.current_user = True, u_id
                         st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
                         st.rerun()
                 st.error("정보 불일치")
-            except Exception as e:
-                st.error(f"연결 오류: {e}")
+            except Exception: st.error("로그인 실패")
 else:
+    # 사이드바
     with st.sidebar:
         st.success(f"✅ **{st.session_state.nickname}**님")
         if st.button("LOGOUT"):
@@ -93,7 +108,13 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    st.title(f"🚀 {st.session_state.nickname} 작업등록")
+    # --- 메인 헤더 영역 (타이틀 + 충전하기 버튼) ---
+    # HTML을 사용하여 한 줄에 배치
+    charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
+    st.markdown(f"""
+        <h1 style='display: inline;'>🚀 {st.session_state.nickname} 작업등록</h1>
+        <a href='{charge_url}' target='_blank' class='charge-btn'>💰 충전하기</a>
+    """, unsafe_allow_html=True)
     
     try:
         client = get_gspread_client()
@@ -109,30 +130,23 @@ else:
             m2.metric("댓글", f"{user_data[3]}")
             m3.metric("스크랩", f"{user_data[4]}")
             m4.metric("접속ID", user_data[0])
-            
             st.divider()
             
             st.subheader(UI_TEXT["SUB_TITLE_INPUT"])
             h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-            labels = ["키워드", "URL (필수)", "공", "댓", "스"]
-            for i, txt in enumerate(labels): h_col[i].caption(txt)
+            for i, txt in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[i].caption(txt)
 
-            rows_data = []
-            link_errors = [] # 오류가 있는 행 번호 저장용
-
+            rows_data, link_errors = [], []
             for i in range(10):
                 r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}", placeholder="(키워드)")
-                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}", placeholder="(링크 입력)")
+                kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}", placeholder="키워드")
+                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}", placeholder="URL")
                 l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"l_{i}")
                 r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"r_{i}")
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"s_{i}")
                 
                 if url.strip():
-                    # 링크 형식 검사
-                    if not is_valid_naver_link(url):
-                        link_errors.append(f"{i+1}행")
-                    # 유효한 수량 검사 (URL이 있을 때 공/댓/스 중 하나라도 1 이상이어야 함)
+                    if not is_valid_naver_link(url): link_errors.append(f"{i+1}행")
                     elif l > 0 or r > 0 or s > 0:
                         rows_data.append({"kw": kw if kw else "", "link": url.strip(), "l": l, "r": r, "s": s})
 
@@ -145,24 +159,15 @@ else:
                 else:
                     with st.spinner("📦 처리 중..."):
                         t_l, t_r, t_s = sum(d['l'] for d in rows_data), sum(d['r'] for d in rows_data), sum(d['s'] for d in rows_data)
-                        
-                        # 잔여 수량 체크
                         if int(user_data[2]) >= t_l and int(user_data[3]) >= t_r and int(user_data[4]) >= t_s:
                             acc_sheet.update_cell(user_row_idx, 3, int(user_data[2]) - t_l)
                             acc_sheet.update_cell(user_row_idx, 4, int(user_data[3]) - t_r)
                             acc_sheet.update_cell(user_row_idx, 5, int(user_data[4]) - t_s)
-                            
                             for d in rows_data:
-                                hist_sheet.append_row([
-                                    datetime.now().strftime('%Y-%m-%d %H:%M'), 
-                                    d['kw'], d['link'], d['l'], d['r'], d['s'], 
-                                    st.session_state.current_user
-                                ])
+                                hist_sheet.append_row([datetime.now().strftime('%Y-%m-%d %H:%M'), d['kw'], d['link'], d['l'], d['r'], d['s'], st.session_state.current_user])
                             st.success(UI_TEXT["SUCCESS_MSG"])
                             time.sleep(1)
                             st.rerun()
-                        else:
-                            st.error("❌ 잔여 수량이 부족합니다. 수량을 다시 확인해주세요.")
+                        else: st.error("❌ 잔여 수량이 부족합니다.")
 
-    except Exception as e:
-        st.error(f"데이터 연동 실패: {e}")
+    except Exception as e: st.error("연동 실패")
