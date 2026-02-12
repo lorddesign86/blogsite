@@ -68,12 +68,6 @@ st.markdown(f"""
     div.stButton > button:first-child[kind="primary"] p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: bold !important;
     }}
-    @media (max-width: 768px) {{
-        div.stButton > button:first-child[kind="primary"] {{
-            position: fixed; bottom: 10px; left: 5%; right: 5%; width: 90% !important; z-index: 999;
-            height: 4.2rem !important;
-        }}
-    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -89,7 +83,6 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 앱 실행 로직 ---
 if not st.session_state.logged_in:
     st.markdown("### 🛡️ 파우쓰 관리자 로그인")
     u_id = st.text_input("ID")
@@ -147,11 +140,13 @@ else:
             h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
             for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
 
-            rows_data, link_errors = [], []
+            rows_data = []
+            link_errors = []
             for i in range(10):
                 r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}", placeholder="(키워드)")
-                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}", placeholder="(URL 입력)")
+                # 입력창 생성
+                kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}")
+                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}")
                 l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"l_{i}")
                 r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"r_{i}")
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"s_{i}")
@@ -161,10 +156,10 @@ else:
                     elif l > 0 or r > 0 or s > 0:
                         rows_data.append({"kw": kw if kw else "", "link": url.strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 등록 버튼
-            if st.button("🔥 작업넣기", type="primary", key="submit_btn"):
+            # 🔥 등록 버튼 및 초기화 로직
+            if st.button("🔥 작업넣기", type="primary"):
                 if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
-                elif not rows_data: st.warning("⚠️ 등록할 데이터를 입력해주세요.")
+                elif not rows_data: st.warning("⚠️ 데이터를 입력해주세요.")
                 else:
                     with st.spinner("📦 처리 중..."):
                         t_l, t_r, t_s = sum(d['l'] for d in rows_data), sum(d['r'] for d in rows_data), sum(d['s'] for d in rows_data)
@@ -178,10 +173,19 @@ else:
                                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                                     d['kw'], d['link'], d['l'], d['r'], d['s'], 
                                     st.session_state.current_user,
-                                    st.session_state.nickname # H열 닉네임 자동 입력
+                                    st.session_state.nickname # H열 닉네임
                                 ])
-                            st.success("🎊 등록 완료! 입력창이 초기화됩니다.")
-                            time.sleep(1.5) # 성공 메시지 보여줄 시간
-                            st.rerun() # [핵심] 등록 후 입력창 초기화를 위한 새로고침
+                            
+                            # [핵심] 등록 성공 시 입력창 강제 초기화
+                            for i in range(10):
+                                st.session_state[f"kw_{i}"] = ""
+                                st.session_state[f"url_{i}"] = ""
+                                st.session_state[f"l_{i}"] = 0
+                                st.session_state[f"r_{i}"] = 0
+                                st.session_state[f"s_{i}"] = 0
+                            
+                            st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
+                            time.sleep(1)
+                            st.rerun()
                         else: st.error("❌ 잔여 수량 부족")
     except Exception: st.error("데이터 연동 실패")
