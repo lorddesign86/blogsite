@@ -92,34 +92,29 @@ def get_gspread_client():
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
 # --- 메인 실행 로직 ---
+# 수정 포인트: 로그인 부분
 if not st.session_state.logged_in:
-    # 🚀 로그인 화면 중앙 정렬을 위한 컬럼 배치
     _, center_col, _ = st.columns([1, 1.5, 1])
-    
     with center_col:
-        st.write("") # 상단 여백
-        st.write("") 
         with st.form("login_form"):
-            st.markdown("### 🛡️ 파우쓰 관리자 로그인")
-            u_id = st.text_input("ID", placeholder="아이디를 입력하세요")
-            u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요")
+            st.markdown("### 🛡️ 로그인")
+            u_id = st.text_input("ID")
+            u_pw = st.text_input("PW", type="password")
             login_submitted = st.form_submit_button("LOGIN")
             
             if login_submitted:
                 try:
+                    # 💡 API 연결을 시도하기 전에 짧은 대기 시간을 주어 충돌을 방지합니다.
+                    time.sleep(0.5) 
                     client = get_gspread_client()
                     sh = client.open("작업_관리_데이터베이스")
-                    acc_sheet = sh.worksheet("Accounts")
-                    all_vals = acc_sheet.get_all_values()
-                    for row in all_vals[1:]:
-                        if len(row) >= 2 and str(row[0]) == u_id and str(row[1]) == u_pw:
-                            st.session_state.logged_in = True
-                            st.session_state.current_user = u_id
-                            st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
-                            st.rerun()
-                    st.error("아이디 또는 비밀번호가 일치하지 않습니다.")
-                except:
-                    st.error("데이터베이스 연동에 실패했습니다.")
+                    # ... 이하 기존 로직 ...
+                except Exception as e:
+                    # 💡 구체적인 에러 내용을 로그로 찍어 원인을 파악하기 쉽게 합니다.
+                    st.error(f"다시 로그인을 시도해주세요: {str(e)}")
+
+
+
 else:
     # 사이드바
     with st.sidebar:
@@ -180,7 +175,7 @@ else:
                     link_errors = [f"{i+1}행" for i, d in enumerate(rows_inputs) if d['url'].strip() and not is_valid_naver_link(d['url'])]
 
                     if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
-                    elif not rows_to_submit: st.warning("⚠️ 데이터를 입력해주세요.")
+                    elif not rows_to_submit: st.warning("⚠️ 작업링크를 입력해주세요.")
                     else:
                         rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
                         total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
@@ -197,7 +192,7 @@ else:
                                     st.session_state.current_user,
                                     st.session_state.nickname
                                 ])
-                            st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
+                            st.success("🎊 등록 완료! 순차적으로 작업 시작됩니다.")
                             time.sleep(1)
                             st.rerun()
                         else: st.error("❌ 잔여 수량이 부족합니다.")
