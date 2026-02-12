@@ -4,10 +4,8 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import pandas as pd
 
-# 페이지 설정
 st.set_page_config(page_title="작업 자동화 시스템", layout="wide")
 
-# 1. 로그인 세션 관리
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'current_user' not in st.session_state:
@@ -19,10 +17,8 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
-# 메인 레이아웃
 col_login, col_main = st.columns([1, 4], gap="large")
 
-# --- 왼쪽: 로그인 영역 (Accounts 시트 2열부터 참조) ---
 with col_login:
     st.subheader("🔒 로그인")
     if not st.session_state.logged_in:
@@ -33,19 +29,25 @@ with col_login:
                 client = get_gspread_client()
                 sh = client.open("작업_관리_데이터베이스")
                 acc_sheet = sh.worksheet("Accounts")
-                # get_all_records()는 자동으로 1행을 제목으로 인식하고 2행부터 데이터를 가져옵니다.
-                acc_data = pd.DataFrame(acc_sheet.get_all_records())
+                # values_get()을 사용하여 제목 상관없이 모든 데이터를 가져옵니다.
+                all_values = acc_sheet.get_all_values() 
                 
-                if not acc_data.empty:
-                    user_match = acc_data[(acc_data['ID'].astype(str) == u_id) & (acc_data['PW'].astype(str) == u_pw)]
-                    if not user_match.empty:
-                        st.session_state.logged_in = True
-                        st.session_state.current_user = u_id
+                if len(all_values) > 1:
+                    # 1행은 제목이므로 제외하고 2행(all_values[1:])부터 검사
+                    login_success = False
+                    for row in all_values[1:]:
+                        if str(row[0]) == u_id and str(row[1]) == u_pw:
+                            st.session_state.logged_in = True
+                            st.session_state.current_user = u_id
+                            login_success = True
+                            break
+                    
+                    if login_success:
                         st.rerun()
                     else:
                         st.error("아이디 또는 비밀번호가 틀립니다.")
                 else:
-                    st.error("시트에 데이터가 없습니다 (2행부터 입력 확인).")
+                    st.error("시트 2행에 데이터가 없습니다.")
             except Exception as e:
                 st.error(f"로그인 오류: {e}")
     else:
@@ -55,7 +57,6 @@ with col_login:
             st.session_state.current_user = None
             st.rerun()
 
-# --- 오른쪽: 작업 입력 영역 ---
 with col_main:
     st.title("🚀 작업 자동화 시스템")
     
@@ -68,14 +69,26 @@ with col_main:
             acc_sheet = sh.worksheet("Accounts")
             hist_sheet = sh.worksheet("History")
 
-            # 내 계정 정보 가져오기
-            acc_data = pd.DataFrame(acc_sheet.get_all_records())
-            my_info_all = acc_data[acc_data['ID'].astype(str) == st.session_state.current_user]
-            
-            if not my_info_all.empty:
-                my_info = my_info_all.iloc[0]
+            all_values = acc_sheet.get_all_values()
+            # 현재 로그인한 사용자의 행 찾기 (2행부터)
+            user_row_idx = -1
+            user_data = []
+            for idx, row in enumerate(all_values[1:], start=2):
+                if row[0] == st.session_state.current_user:
+                    user_row_idx = idx
+                    user_data = row
+                    break
+
+            if user_row_idx != -1:
                 with st.expander("📊 나의 잔여 수량 확인", expanded=True):
-                    st.table(pd.DataFrame([my_info[['ID', '잔여_공감', '잔여_댓글', '잔여_스크랩']]]))
+                    # C, D, E열 값을 숫자로 변환하여 표시
+                    display_df = pd.DataFrame([{
+                        "ID": user_data[0],
+                        "잔여_공감": user_data[2],
+                        "잔여_댓글": user_data[3],
+                        "잔여_스크랩": user_data[4]
+                    }])
+                    st.table(display_df)
 
                 st.divider()
                 st.subheader("📝 일괄 작업 등록 (최대 10행)")
@@ -107,27 +120,27 @@ with col_main:
                             total_r = sum(d['r'] for d in rows_data)
                             total_s = sum(d['s'] for d in rows_data)
 
-                            if my_info['잔여_공감'] >= total_l and my_info['잔여_댓글'] >= total_r and my_info['잔여_스크랩'] >= total_s:
-                                # 정확한 행 번호 계산 (index 0은 2행이 됨)
-                                row_idx = my_info_all.index[0] + 2
-                                
-                                # Accounts 시트 수량 차감 업데이트 (C, D, E열)
-                                acc_sheet.update_cell(row_idx, 3, int(my_info['잔여_공감'] - total_l))
-                                acc_sheet.update_cell(row_idx, 4, int(my_info['잔여_댓글'] - total_r))
-                                acc_sheet.update_cell(row_idx, 5, int(my_info['잔여_스크랩'] - total_s))
+                            # 현재 수량 (숫자로 변환)
+                            cur_l = int(user_data[2])
+                            cur_r = int(user_data[3])
+                            cur_s = int(user_data[4])
 
-                                # History 시트 기록 (2행부터 순차적으로 추가됨)
+                            if cur_l >= total_l and cur_r >= total_r and cur_s >= total_s:
+                                # 수량 차감 업데이트 (C, D, E열)
+                                acc_sheet.update_cell(user_row_idx, 3, cur_l - total_l)
+                                acc_sheet.update_cell(user_row_idx, 4, cur_r - total_r)
+                                acc_sheet.update_cell(user_row_idx, 5, cur_s - total_s)
+
                                 for d in rows_data:
                                     hist_sheet.append_row([
                                         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                                         d['kw'], d['link'], d['l'], d['r'], d['s'], st.session_state.current_user
                                     ])
-                                st.success(f"✅ 총 {len(rows_data)}건 등록 완료! 수량이 차감되었습니다.")
+                                st.success(f"✅ 총 {len(rows_data)}건 등록 완료!")
                                 st.rerun()
                             else:
                                 st.error("❌ 잔여 수량이 부족합니다.")
             else:
-                st.error("계정 정보를 찾을 수 없습니다.")
-
+                st.error("사용자 정보를 찾을 수 없습니다.")
         except Exception as e:
             st.error(f"오류 발생: {e}")
