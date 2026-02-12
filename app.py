@@ -10,38 +10,38 @@ import re
 # 📐 [FONT_CONFIG] - 글자 크기를 여기서 수정하세요!
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "15px",   # 사이드바 서비스 링크 글자 크기
-    "LOGOUT_BTN": "16px",      # 로그아웃 버튼 글자 크기
-    "MAIN_TITLE": "32px",      # 메인 제목 크기
-    "CHARGE_BTN": "16px",      # 충전하기 버튼 글자 크기
-    "REMAIN_TITLE": "22px",    # '실시간 잔여 수량' 제목 크기
-    "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
-    "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
-    "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 크기
-    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
-    "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기
+    "SIDEBAR_ID": "25px",      
+    "SIDEBAR_LINKS": "15px",   
+    "LOGOUT_BTN": "16px",      
+    "MAIN_TITLE": "32px",      
+    "CHARGE_BTN": "16px",      
+    "REMAIN_TITLE": "22px",    
+    "METRIC_LABEL": "16px",    
+    "METRIC_VALUE": "35px",    
+    "REGISTER_TITLE": "22px",  
+    "TABLE_HEADER": "15px",    
+    "TABLE_INPUT": "16px",     # KeyError 방지: 이름이 정확해야 합니다.
+    "SUBMIT_BTN": "26px"       
 }
 
 # --- 📢 서비스 링크 ---
 ANNOUNCEMENTS = [
     {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
-    {"text": "👉 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
-    {"text": "👉 스댓공 개별서비스", "url": "https://kmong.com/gig/445340"},
-    {"text": "👉 방문자 서비스 보러가", "url": "https://caring-kayak-cd7.notion.site/27707671d021808a9567edb8ad065b28?source=copy_link"},
-    {"text": "👉 이웃 서비스 100~700명", "url": "https://kmong.com/gig/668226"},
-    {"text": "👉 최적화 블로그리스트 추출프로그램", "url": "https://kmong.com/gig/725815"},
+    {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
+    {"text": "📢 스댓공 개별서비스", "url": "https://kmong.com/gig/445340"},
+    {"text": "📢 방문자 서비스 보러가", "url": "https://caring-kayak-cd7.notion.site/27707671d021808a9567edb8ad065b28?source=copy_link"},
+    {"text": "📢 이웃 서비스 100~700명", "url": "https://kmong.com/gig/668226"},
+    {"text": "📢 최적화 블로그리스트 추출프로그램", "url": "https://kmong.com/gig/725815"},
 ]
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (중괄호 이중화 처리) ---
+# --- 🎨 디자인 & 정렬 CSS ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
     
-    /* 로그인 상자 중앙 정렬용 디자인 */
+    /* 로그인 상자 중앙 정렬 */
     [data-testid="stForm"] {{
         border: 1px solid #444 !important;
         border-radius: 15px !important;
@@ -55,6 +55,7 @@ st.markdown(f"""
     
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
+    
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
@@ -70,7 +71,6 @@ st.markdown(f"""
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     
-    /* 입력창 글자 크기 적용 */
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
 
@@ -97,20 +97,21 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 1. 로그인 로직 (중앙 정렬 및 엔터 로그인 적용) ---
+# --- 1. 로그인 로직 (들여쓰기 오류 해결 및 자동저장 추가) ---
 if not st.session_state.logged_in:
-    # 화면을 3개로 나누어 가운데만 사용 (중앙 정렬)
-    _, center_col, _ = st.columns([1, 1.2, 1])
+    _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
-        st.write("") # 상단 여백
         st.write("") 
-with st.form("login_form"):
-    st.markdown("### 🛡️ 파우쓰 관리자 로그인")
-    u_id = st.text_input("ID", placeholder="아이디를 입력하세요", autocomplete="username")
-    u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요", autocomplete="current-password")
-    
-    login_submitted = st.form_submit_button("LOGIN")
+        st.write("") 
+        # autocomplete를 위해 st.form을 사용합니다.
+        with st.form("login_form"):
+            st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+            # 브라우저 자동저장을 위해 autocomplete 옵션을 넣었습니다.
+            u_id = st.text_input("ID", placeholder="아이디를 입력하세요", autocomplete="username")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요", autocomplete="current-password")
+            login_submitted = st.form_submit_button("LOGIN")
             
+            # ❗ 여기서부터 들여쓰기가 정확해야 합니다.
             if login_submitted:
                 try:
                     time.sleep(0.5) 
@@ -142,8 +143,8 @@ else:
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
-            <span class="main-title">🚀 {st.session_state.nickname}님의 작업등록</span>
-            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전요청하기</a>
+            <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
+            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
         </div>
     """, unsafe_allow_html=True)
     
@@ -157,9 +158,9 @@ else:
         if user_row_idx != -1:
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
-            m_cols[0].metric("공감", f"{user_data[2]}")
-            m_cols[1].metric("댓글", f"{user_data[3]}")
-            m_cols[2].metric("스크랩", f"{user_data[4]}")
+            m_cols[0].metric("공감", f"{user_data[2]}개")
+            m_cols[1].metric("댓글", f"{user_data[3]}개")
+            m_cols[2].metric("스크랩", f"{user_data[4]}개")
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
@@ -167,16 +168,16 @@ else:
             
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                for idx, label in enumerate(["키워드(입력하지 않아도 됩니다)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                    kw = r_col[0].text_input(f"키워드_{i}", label_visibility="collapsed")
-                    url = r_col[1].text_input(f"URL_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
-                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="공감")
-                    r = r_col[3].number_input(f"댓_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="댓글")
-                    s = r_col[4].number_input(f"스_{i}", min_value=0, step=1, label_visibility="collapsed", placeholder="스크랩")
+                    kw = r_col[0].text_input(f"키워드_{i}", label_visibility="collapsed", placeholder="(키워드)")
+                    url = r_col[1].text_input(f"URL_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
+                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    r = r_col[3].number_input(f"댓_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    s = r_col[4].number_input(f"스_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
@@ -188,7 +189,7 @@ else:
                     if link_errors:
                         st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
                     elif not rows_to_submit:
-                        st.warning("⚠️ 링크와 수량을 입력해주세요.")
+                        st.warning("⚠️ 데이터를 입력해주세요.")
                     else:
                         with st.spinner("📦 처리 중..."):
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
@@ -207,10 +208,10 @@ else:
                                         st.session_state.current_user,
                                         st.session_state.nickname # H열에 닉네임 자동 기록
                                     ])
-                                st.success("🎊 작업 등록 완료!")
+                                st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
                                 time.sleep(1)
                                 st.rerun()
                             else:
-                                st.error("❌ 잔여 수량이 부족합니다. 충전 후 이용해주세요.")
+                                st.error("❌ 잔여 수량이 부족합니다.")
     except Exception as e:
         st.error(f"동기화 실패: {str(e)}")
