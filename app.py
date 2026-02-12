@@ -10,21 +10,20 @@ import re
 # 📐 [FONT_CONFIG] - 글자 크기 설정
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "15px",   # 사이드바 서비스 링크 크기
-    "LOGOUT_BTN": "16px",      # 로그아웃 버튼 크기
-    "MAIN_TITLE": "32px",      # 메인 제목 크기
-    "CHARGE_BTN": "16px",      # 충전하기 버튼 크기
-    "REMAIN_TITLE": "22px",    # '실시간 잔여 수량' 제목 크기
-    "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
-    "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
-    "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "15px",    # 입력창 상단 라벨 크기
-    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "26px"       # 작업넣기 버튼 글자 크기
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID
+    "SIDEBAR_LINKS": "15px",   # 사이드바 링크
+    "LOGOUT_BTN": "16px",      # 로그아웃 버튼
+    "MAIN_TITLE": "32px",      # 메인 제목
+    "CHARGE_BTN": "16px",      # 충전하기 버튼
+    "REMAIN_TITLE": "22px",    # '실시간 잔여 수량' 제목
+    "METRIC_LABEL": "16px",    # 수량 항목 이름
+    "METRIC_VALUE": "35px",    # 잔여 수량 숫자
+    "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목
+    "TABLE_HEADER": "15px",    # 입력창 상단 라벨
+    "INPUT_TEXT": "16px",      # 입력창 내부 글자
+    "SUBMIT_BTN": "26px"       # 작업넣기 버튼
 }
 
-# --- 📢 서비스 링크 ---
 ANNOUNCEMENTS = [
     {"text": "👉 파우쓰 서비스 전체보기", "url": "https://kmong.com/@파우쓰"},
     {"text": "📢 스댓공 월 자동서비스", "url": "https://kmong.com/gig/645544"},
@@ -36,7 +35,7 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 보정 CSS (중괄호 오류 수정) ---
+# --- 🎨 디자인 & 정렬 CSS ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
@@ -58,7 +57,7 @@ st.markdown(f"""
     }}
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
+    input {{ font-size: {FONT_CONFIG['INPUT_TEXT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
     div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important; height: 75px !important;
@@ -81,9 +80,20 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
+# --- 🚀 [핵심] 입력 데이터 초기화 함수 ---
+def reset_inputs():
+    for i in range(10):
+        st.session_state[f"kw_{i}"] = ""
+        st.session_state[f"url_{i}"] = ""
+        st.session_state[f"l_{i}"] = 0
+        st.session_state[f"r_{i}"] = 0
+        st.session_state[f"s_{i}"] = 0
+
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
+# --- 앱 실행 ---
 if not st.session_state.logged_in:
+    # 로그인 폼
     st.markdown("### 🛡️ 파우쓰 관리자 로그인")
     u_id = st.text_input("ID")
     u_pw = st.text_input("PW", type="password")
@@ -95,12 +105,12 @@ if not st.session_state.logged_in:
             all_vals = acc_sheet.get_all_values()
             for row in all_vals[1:]:
                 if len(row) >= 2 and str(row[0]) == u_id and str(row[1]) == u_pw:
-                    st.session_state.logged_in = True
-                    st.session_state.current_user = u_id
+                    st.session_state.logged_in, st.session_state.current_user = True, u_id
                     st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
+                    reset_inputs() # 초기 진입 시 세션 생성
                     st.rerun()
             st.error("정보 불일치")
-        except: st.error("로그인 연동 실패")
+        except: st.error("연동 실패")
 else:
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
@@ -137,59 +147,48 @@ else:
             st.divider()
 
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
-            h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-            for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
+            
+            # 폼을 사용하여 등록 후 즉시 초기화 구현
+            with st.form("work_registration_form", clear_on_submit=True):
+                h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
+                for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
 
-            rows_data = []
-            link_errors = []
-            for i in range(10):
-                r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
-                kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", key=f"kw_{i}")
-                url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", key=f"url_{i}")
-                l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"l_{i}")
-                r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"r_{i}")
-                s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed", key=f"s_{i}")
-                
-                if url.strip():
-                    if not is_valid_naver_link(url): link_errors.append(f"{i+1}행")
-                    elif l > 0 or r > 0 or s > 0:
-                        rows_data.append({"kw": kw if kw else "", "link": url.strip(), "l": l, "r": r, "s": s})
+                rows_inputs = []
+                for i in range(10):
+                    r_col = st.columns([2, 3, 0.8, 0.8, 0.8])
+                    kw = r_col[0].text_input(f"키워드_{i}", label_visibility="collapsed", placeholder="(키워드)")
+                    url = r_col[1].text_input(f"URL_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
+                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    r = r_col[3].number_input(f"댓_{idx}_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    s = r_col[4].number_input(f"스_{idx}_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
-            if st.button("🔥 작업넣기", type="primary"):
-                if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
-                elif not rows_data: st.warning("⚠️ 데이터를 입력해주세요.")
-                else:
-                    with st.spinner("📦 처리 중..."):
-                        # [연동 오류 방지] 숫자 형변환 강화
+                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
+
+                if submitted:
+                    rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
+                    link_errors = [f"{i+1}행" for i, d in enumerate(rows_inputs) if d['url'].strip() and not is_valid_naver_link(d['url'])]
+
+                    if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
+                    elif not rows_to_submit: st.warning("⚠️ 데이터를 입력해주세요.")
+                    else:
                         rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
-                        total_l, total_r, total_s = sum(d['l'] for d in rows_data), sum(d['r'] for d in rows_data), sum(d['s'] for d in rows_data)
-                        
+                        total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
+
                         if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                            # 1. 시트 잔여 수량 차감
                             acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                             acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                             acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
                             
-                            # 2. 히스토리 기록 (H열 닉네임 추가)
-                            for d in rows_data:
+                            for d in rows_to_submit:
                                 hist_sheet.append_row([
                                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
-                                    d['kw'], d['link'], d['l'], d['r'], d['s'], 
+                                    d['kw'], d['url'], d['l'], d['r'], d['s'], 
                                     st.session_state.current_user,
-                                    st.session_state.nickname # H열 자동 입력
+                                    st.session_state.nickname
                                 ])
-                            
-                            # 3. 입력 세션 강제 비우기
-                            for i in range(10):
-                                st.session_state[f"kw_{i}"] = ""
-                                st.session_state[f"url_{i}"] = ""
-                                st.session_state[f"l_{i}"] = 0
-                                st.session_state[f"r_{i}"] = 0
-                                st.session_state[f"s_{i}"] = 0
-                            
                             st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
                             time.sleep(1)
-                            st.rerun()
-                        else: st.error("❌ 잔여 수량이 부족합니다.")
-    except Exception as e: 
-        st.error(f"데이터 연동 실패: {e}") # 상세 에러 확인용
+                            st.rerun() # 폼 외부 데이터 동기화를 위해 재실행
+                        else: st.error("❌ 잔여 수량 부족")
+    except Exception as e: st.error(f"데이터 연동 실패: {e}")
