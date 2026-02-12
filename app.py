@@ -7,7 +7,7 @@ import time
 import re
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 글자 크기 설정
+# 📐 [FONT_CONFIG] - 요청하신 폰트 설정 적용
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
@@ -20,7 +20,7 @@ FONT_CONFIG = {
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "25px",    # 입력창 상단 라벨 크기
-    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
+    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
     "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기
 }
 
@@ -57,7 +57,6 @@ st.markdown(f"""
         font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
     }}
 
-    /* 잔여 수량 박스 디자인 복구 */
     div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
     [data-testid="stMetric"] {{
         background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
@@ -75,12 +74,11 @@ st.markdown(f"""
         background-color: #FF4B4B !important; border-radius: 15px !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.4); margin-top: 25px;
     }}
+    div.stButton > button:first-child[kind="primary"] p {{
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: bold !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
-
-def is_valid_naver_link(url):
-    pattern = r'^https?://(m\.)?blog\.naver\.com/[\w-]+/\d+$'
-    return re.match(pattern, url.strip()) is not None
 
 def get_gspread_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -122,7 +120,6 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # 상단 헤더
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
@@ -139,7 +136,6 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            # 🚀 [복구됨] 실시간 잔여 수량 섹션
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
@@ -148,63 +144,48 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # 작업 일괄 등록 섹션
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-                for idx, label in enumerate(["키워드(입력하지 않아도 됩니다)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
+                for idx, label in enumerate(["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
                     kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed")
-                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
-                    # 수량 조절 버튼(+/-) 포함
+                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="https://~")
                     l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
                     r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
-if st.form_submit_button("🔥 작업넣기", type="primary"):
+                # --- 작업 등록 및 이중 시트 기록 로직 ---
+                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
+
+                if submitted:
                     rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
-                    
                     if rows_to_submit:
-                        with st.spinner("두 개의 시트에 기록 중입니다..."):
+                        with st.spinner("두 시트에 기록 중..."):
                             try:
-                                # 1. 새로운 외부 시트 연결 (ID 기준)
+                                # 외부 출력용 시트 열기
                                 target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                                 target_work_sheet = target_sh.worksheet("작업")
-
+                                
                                 for d in rows_to_submit:
                                     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                                    
-                                    # --- [기존 시트] History 시트 기록 (기존 방식 유지) ---
-                                    # A:날짜, B:키워드, C:URL, D:공감, E:댓글, F:스크랩, G:아이디, H:닉네임
+                                    # 1. 기존 History 시트 기록
                                     hist_sheet.append_row([
                                         now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], 
                                         st.session_state.current_user, st.session_state.nickname
                                     ])
-
-                                    # --- [새로운 시트] "작업" 시트 기록 (열 위치 변경 반영) ---
-                                    # 요청하신 위치: C(날짜), D(키워드), E(URL), F(공감), G(댓글), I(닉네임)
-                                    # 리스트 순서: [A, B, C, D, E, F, G, H, I]
-                                    target_row = [
-                                        "",          # A: 빈칸
-                                        "",          # B: 빈칸
-                                        now_str,     # C: (기존A) 날짜
-                                        d['kw'],     # D: (기존B) 키워드
-                                        d['url'],    # E: (기존C) URL
-                                        d['l'],      # F: (기존D) 공감
-                                        d['r'],      # G: (기존E) 댓글
-                                        d['s'],      # H: (기존F) 스크랩
-                                        st.session_state.nickname # I: (기존H) 닉네임
-                                    ]
-                                    target_work_sheet.append_row(target_row)
-
+                                    # 2. 외부 시트 기록 (열 위치 지정: C,D,E,F,G,I)
+                                    target_work_sheet.append_row([
+                                        "", "", now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname
+                                    ])
+                                
                                 st.success("🎊 모든 시트에 등록 완료!")
                                 time.sleep(1)
                                 st.rerun()
-                                
-                            except Exception as e:
-                                st.error(f"기록 실패: {str(e)}")
-                                st.info("새로운 스프레드시트에 '서비스 계정 이메일'이 편집자로 공유되어 있는지 확인해주세요.")
+                            except Exception as ex:
+                                st.error(f"시트 기록 오류: {ex}")
+    except Exception as e: st.error(f"동기화 실패: {e}")
