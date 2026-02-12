@@ -136,7 +136,7 @@ else:
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
-            <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
+            <span class="main-title">🚀 {st.session_state.nickname} 님의 작업등록</span>
             <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
         </div>
     """, unsafe_allow_html=True)
