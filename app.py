@@ -20,8 +20,8 @@ FONT_CONFIG = {
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "25px",    # 입력창 상단 라벨 크기
-    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
-    "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기
+    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
+    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (기존 40px에서 상향)
 }
 
 ANNOUNCEMENTS = [
@@ -35,20 +35,29 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (하단 버튼 고정 포함) ---
+# --- 🎨 디자인 & 정렬 CSS (하단 버튼 고정 + 사이즈 대폭 확대) ---
 st.markdown(f"""
     <style>
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 120px !important; }}
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
     
-    /* 🚀 하단 작업넣기 버튼 고정 (디자인 유지) */
+    /* 🚀 [변경] 하단 작업넣기 버튼 고정 및 사이즈 키움 */
     div.stButton > button:first-child[kind="primary"] {{
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        width: 90% !important; max-width: 500px; height: 85px !important;
-        background-color: #FF4B4B !important; border-radius: 15px !important;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.6); z-index: 9999;
+        position: fixed; 
+        bottom: 30px; 
+        left: 50%; 
+        transform: translateX(-50%);
+        width: 95% !important;     /* 화면 너비에 맞춰 확장 */
+        max-width: 600px;           /* 최대 너비 키움 */
+        height: 100px !important;    /* 버튼 높이 대폭 확대 */
+        background-color: #FF4B4B !important; 
+        border-radius: 20px !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.7); 
+        z-index: 9999;
+        border: 2px solid white !important;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: bold !important;
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
+        font-weight: 900 !important;
     }}
 
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
@@ -81,10 +90,9 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수 (사용자님이 주신 값 직접 적용)
+# 📢 텔레그램 알림 함수 (사용자 정보 고정)
 def send_telegram_msg(message):
     try:
-        # 사용자 제공 값 직접 입력
         token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
         chat_id = "496784884"
         url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -99,14 +107,13 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 1. 로그인 화면 ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
         with st.form("login_form"):
             st.markdown("### 🛡️ 로그인")
-            u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
-            u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
+            u_id = st.text_input("ID", placeholder="아이디")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호")
             if st.form_submit_button("LOGIN"):
                 try:
                     client = get_gspread_client()
@@ -121,7 +128,6 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 2. 메인 앱 레이아웃 ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -147,7 +153,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
+            st.markdown(f"📊 실시간 잔여 수량")
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
             m_cols[1].metric("댓글", f"{user_data[3]}")
@@ -167,10 +173,12 @@ else:
                     l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
                     r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    # 공백 자동 제거 반영
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                if st.form_submit_button("🔥 작업넣기", type="primary"):
+                # 🚀 하단 고정 버튼 (사이즈 대폭 키움)
+                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
+
+                if submitted:
                     rows_to_submit = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
                         try:
@@ -178,12 +186,10 @@ else:
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                             if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                                # 1. 수량 차감
                                 acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                                 acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                 acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                                # 2. 외부 시트 기록
                                 target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                                 target_ws = target_sh.worksheet("작업")
                                 url_col = target_ws.col_values(5)
@@ -194,9 +200,7 @@ else:
                                     hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                     target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
                                 
-                                # 3. 텔레그램 알림 발송
-                                msg = f"🔔 [파우쓰] 신규 작업 등록!\n사용자: {st.session_state.nickname}\n수량: 공{total_l} / 댓{total_r} / 스{total_s}"
-                                send_telegram_msg(msg)
+                                send_telegram_msg(f"🚀 [{st.session_state.nickname}] 작업 등록!\n수량: 공{total_l} / 댓{total_r} / 스{total_s}")
                                 
                                 st.success("🎊 모든 등록 완료!")
                                 time.sleep(1)
