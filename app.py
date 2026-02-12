@@ -10,18 +10,18 @@ import re
 # 📐 [글자 크기 통합 설정] - 여기서 자유롭게 수정하세요!
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "15px",      # 사이드바 사용자 ID 크기
+    "SIDEBAR_ID": "30px",      # 사이드바 사용자 ID 크기
     "SIDEBAR_LINKS": "13px",   # 사이드바 서비스 링크 크기
     "MAIN_TITLE": "30px",      # 메인 제목 (바둥이 작업등록)
     "CHARGE_BTN": "14px",      # 충전하기 버튼 글자 크기
-    "REMAIN_TITLE": "18px",    # '실시간 잔여 수량' 소제목 크기
-    "METRIC_LABEL": "15px",    # 잔여 수량 항목명 (공감, 댓글 등)
-    "METRIC_VALUE": "24px",    # 잔여 수량 숫자 크기
-    "INPUT_TITLE": "18px",     # '작업 일괄 등록' 소제목 크기
-    "TABLE_HEADER": "14px",    # 입력창 상단 라벨 (키워드, URL 등)
+    "REMAIN_TITLE": "25px",    # '실시간 잔여 수량' 소제목 크기
+    "METRIC_LABEL": "20px",    # 잔여 수량 항목명 (공감, 댓글 등)
+    "METRIC_VALUE": "40px",    # 잔여 수량 숫자 크기
+    "INPUT_TITLE": "30px",     # '작업 일괄 등록' 소제목 크기
+    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 (키워드, URL 등)
     "TABLE_INPUT": "15px",     # 입력창 내부 텍스트 크기
-    "SUBMIT_BTN": "22px",      # 작업넣기 버튼 글자 크기
-    "LOGOUT_BTN": "14px"       # 로그아웃 버튼 글자 크기
+    "SUBMIT_BTN": "40px",      # 작업넣기 버튼 글자 크기
+    "LOGOUT_BTN": "20px"       # 로그아웃 버튼 글자 크기
 }
 
 # --- 1. 기본 설정 및 문구 ---
