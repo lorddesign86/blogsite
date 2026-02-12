@@ -32,7 +32,7 @@ col_login, col_main = st.columns([1, 4], gap="large")
 
 # --- 좌측 사이드: 로그인 섹션 ---
 with col_login:
-    st.markdown("### 🔐 **SYSTEM ACCESS**")
+    st.markdown("###**크몽 파우쓰**")
     if not st.session_state.logged_in:
         u_id = st.text_input("ID", placeholder="Enter ID", key="input_id")
         u_pw = st.text_input("PASSWORD", type="password", placeholder="••••", key="input_pw")
@@ -56,7 +56,7 @@ with col_login:
             except Exception as e: st.error(f"Error: {e}")
     else:
         st.success(f"**{st.session_state.current_user}**님 환영합니다.")
-        st.info("💡 10개 행을 한 번에 등록할 수 있습니다.")
+        st.info("자동관리, 방문자, 이웃서비스는 크몽에서 이용해주세요.")
         if st.button("LOGOUT"):
             st.session_state.logged_in = False
             st.session_state.current_user = None
@@ -64,7 +64,7 @@ with col_login:
 
 # --- 우측 메인: 대시보드 및 입력 섹션 ---
 with col_main:
-    st.title("🚀 작업 자동화 통합 대시보드")
+    st.title("파우쓰 작업등록")
     
     if not st.session_state.logged_in:
         st.warning("로그인 후 시스템을 이용하실 수 있습니다.")
@@ -87,7 +87,7 @@ with col_main:
 
             if user_row_idx != -1:
                 # 상단 잔여 수량 위젯 디자인
-                st.subheader("📊 **현재 실시간 잔여 수량**")
+                st.subheader("📊 **잔여 수량**")
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("ID", user_data[0])
                 c2.metric("공감", f"{user_data[2]}개", delta_color="normal")
@@ -148,7 +148,7 @@ with col_main:
                                 time.sleep(1) # 유저가 메시지를 볼 시간
                                 st.rerun()
                             else:
-                                st.error(f"❌ 잔여 수량이 부족합니다. (필요 공감: {total_l}, 현재: {cur_l})")
+                                st.error(f"❌ 잔여 수량이 부족합니다. 크몽에서 충전 후 이용해주세요.(필요 공감: {total_l}, 현재: {cur_l})")
             else:
                 st.error("사용자 정보를 찾을 수 없습니다.")
         except Exception as e:
