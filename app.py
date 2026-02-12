@@ -93,11 +93,17 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
 # --- 앱 실행 ---
 if not st.session_state.logged_in:
-    # 로그인 폼
-    st.markdown("### 🛡️ 파우쓰 관리자 로그인")
-    u_id = st.text_input("ID")
-    u_pw = st.text_input("PW", type="password")
-    if st.button("LOGIN"):
+    # 좌, 중, 우 비율을 설정하여 가운데(center_col)만 사용합니다.
+    _, center_col, _ = st.columns([1, 1.5, 1]) 
+    
+    with center_col:
+        st.write("") # 위쪽 여백용
+        with st.form("login_form"):
+            st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+            u_id = st.text_input("ID")
+            u_pw = st.text_input("PW", type="password")
+            if st.form_submit_button("LOGIN"):
+                # ... 기존 로그인 검증 로직 ...
         try:
             client = get_gspread_client()
             sh = client.open("작업_관리_데이터베이스")
@@ -180,13 +186,21 @@ else:
                             acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                             acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
                             
-                            for d in rows_to_submit:
-                                hist_sheet.append_row([
-                                    datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
-                                    d['kw'], d['url'], d['l'], d['r'], d['s'], 
-                                    st.session_state.current_user,
-                                    st.session_state.nickname
-                                ])
+# 기존: G열(ID)까지만 저장되던 코드
+# hist_sheet.append_row([시간, 키워드, URL, 공, 댓, 스, ID])
+
+# 수정: 마지막에 닉네임을 추가하여 H열까지 저장
+for d in rows_to_submit:
+    hist_sheet.append_row([
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+        d['kw'], 
+        d['url'], 
+        d['l'], 
+        d['r'], 
+        d['s'], 
+        st.session_state.current_user,
+        st.session_state.nickname  # <--- 이 부분이 추가되어야 H열에 들어갑니다.
+    ])
                             st.success("🎊 작업 등록 완료! 순차적으로 시작됩니다.")
                             time.sleep(1)
                             st.rerun() # 폼 외부 데이터 동기화를 위해 재실행
