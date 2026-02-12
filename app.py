@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "25px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (기존 40px에서 상향)
+    "SUBMIT_BTN": "45px"       # 작업넣기 버튼 글자 크기
 }
 
 ANNOUNCEMENTS = [
@@ -35,29 +35,30 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (하단 버튼 고정 + 사이즈 대폭 확대) ---
+# --- 🎨 디자인 & 정렬 CSS (PC/모바일 버튼 대폭 확대 및 하단 고정) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
     
-    /* 🚀 [변경] 하단 작업넣기 버튼 고정 및 사이즈 키움 */
+    /* 🚀 [변경] PC 및 모바일 공통 하단 고정 버튼 사이즈 대폭 확대 */
     div.stButton > button:first-child[kind="primary"] {{
         position: fixed; 
         bottom: 30px; 
         left: 50%; 
         transform: translateX(-50%);
-        width: 95% !important;     /* 화면 너비에 맞춰 확장 */
-        max-width: 600px;           /* 최대 너비 키움 */
-        height: 100px !important;    /* 버튼 높이 대폭 확대 */
+        width: 80% !important;     /* PC에서도 넓게 보이도록 조정 */
+        max-width: 800px;           /* PC 최대 너비 상향 */
+        height: 110px !important;   /* 버튼 높이 대폭 확대 */
         background-color: #FF4B4B !important; 
         border-radius: 20px !important;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.7); 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
         z-index: 9999;
-        border: 2px solid white !important;
+        border: 3px solid white !important; /* 가독성을 위한 테두리 추가 */
     }}
     div.stButton > button:first-child[kind="primary"] p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
         font-weight: 900 !important;
+        letter-spacing: 2px;
     }}
 
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
@@ -175,7 +176,7 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                # 🚀 하단 고정 버튼 (사이즈 대폭 키움)
+                # 🚀 하단 고정 버튼 (PC 너비 확장 및 높이 상향)
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
