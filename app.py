@@ -35,20 +35,15 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (안내 문구 제거 및 버튼 스타일 포함) ---
+# --- 🎨 디자인 & 정렬 CSS ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
     
-    /* 🚀 "Press Enter to submit form" 안내 문구 숨기기 */
+    /* "Press Enter..." 안내 문구 숨기기 */
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
     small {{ display: none !important; }}
 
-    /* 수량 조절 버튼 스타일 최적화 */
-    div[data-testid="stVerticalBlock"] div[role="group"] {{
-        gap: 0.5rem !important;
-    }}
-    
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
@@ -56,10 +51,25 @@ st.markdown(f"""
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
     
+    .charge-link {{
+        display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
+        color: white !important; text-decoration: none; border-radius: 8px;
+        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
+    }}
+
+    /* 잔여 수량 박스 디자인 복구 */
+    div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
+    [data-testid="stMetric"] {{
+        background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
+        padding: 15px 10px !important; min-height: 110px;
+        display: flex; flex-direction: column; justify-content: center;
+    }}
+    [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
+    [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
+    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
 
-    /* 작업넣기 버튼 대형화 */
     div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important; height: 75px !important;
         background-color: #FF4B4B !important; border-radius: 15px !important;
@@ -96,8 +106,7 @@ if not st.session_state.logged_in:
                     all_vals = acc_sheet.get_all_values()
                     for row in all_vals[1:]:
                         if len(row) >= 2 and str(row[0]) == u_id and str(row[1]) == u_pw:
-                            st.session_state.logged_in = True
-                            st.session_state.current_user = u_id
+                            st.session_state.logged_in, st.session_state.current_user = True, u_id
                             st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
                             st.rerun()
                     st.error("정보 불일치")
@@ -113,8 +122,14 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # 헤더 및 잔여 수량 표시
-    st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname} 작업등록</div>', unsafe_allow_html=True)
+    # 상단 헤더
+    charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
+    st.markdown(f"""
+        <div class="header-wrapper">
+            <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
+            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전하기</a>
+        </div>
+    """, unsafe_allow_html=True)
     
     try:
         client = get_gspread_client()
@@ -124,31 +139,33 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
+            # 🚀 [복구됨] 실시간 잔여 수량 섹션
+            st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
+            m_cols = st.columns(4)
+            m_cols[0].metric("공감", f"{user_data[2]}개")
+            m_cols[1].metric("댓글", f"{user_data[3]}개")
+            m_cols[2].metric("스크랩", f"{user_data[4]}개")
+            m_cols[3].metric("접속ID", user_data[0])
             st.divider()
-            st.markdown(f"📝 작업 일괄 등록")
-            
+
+            # 작업 일괄 등록 섹션
+            st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             with st.form("work_registration_form", clear_on_submit=True):
-                h_col = st.columns([2, 3, 1.2, 1.2, 1.2]) # 버튼 공간 확보를 위해 너비 조정
-                labels = ["키워드", "URL (필수)", "공감", "댓글", "스크랩"]
-                for idx, label in enumerate(labels): h_col[idx].caption(label)
+                h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
+                for idx, label in enumerate(["키워드", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
                 rows_inputs = []
                 for i in range(10):
                     r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
                     kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed", placeholder="(키워드)")
                     url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력)")
-                    
-                    # 🚀 버튼 기능이 포함된 number_input (step=1 설정 시 +/- 버튼 생성)
-                    l = r_col[2].number_input(f"공_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    r = r_col[3].number_input(f"댓_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    s = r_col[4].number_input(f"스_{i}", min_value=0, step=1, label_visibility="collapsed")
-                    
+                    # 수량 조절 버튼(+/-) 포함
+                    l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
+                    s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
-                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
-
-                if submitted:
-                    # 데이터 필터링 및 구글 시트 H열 기록 로직
+                if st.form_submit_button("🔥 작업넣기", type="primary"):
                     rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
                         for d in rows_to_submit:
