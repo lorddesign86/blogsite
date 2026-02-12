@@ -165,17 +165,46 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
-                if st.form_submit_button("🔥 작업넣기", type="primary"):
+if st.form_submit_button("🔥 작업넣기", type="primary"):
                     rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
+                    
                     if rows_to_submit:
-                        for d in rows_to_submit:
-                            hist_sheet.append_row([
-                                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
-                                d['kw'], d['url'], d['l'], d['r'], d['s'], 
-                                st.session_state.current_user,
-                                st.session_state.nickname # H열 기록
-                            ])
-                        st.success("🎊 작업 등록 완료!")
-                        time.sleep(1)
-                        st.rerun()
-    except Exception as e: st.error(f"동기화 실패: {str(e)}")
+                        with st.spinner("두 개의 시트에 기록 중입니다..."):
+                            try:
+                                # 1. 새로운 외부 시트 연결 (ID 기준)
+                                target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
+                                target_work_sheet = target_sh.worksheet("작업")
+
+                                for d in rows_to_submit:
+                                    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                    
+                                    # --- [기존 시트] History 시트 기록 (기존 방식 유지) ---
+                                    # A:날짜, B:키워드, C:URL, D:공감, E:댓글, F:스크랩, G:아이디, H:닉네임
+                                    hist_sheet.append_row([
+                                        now_str, d['kw'], d['url'], d['l'], d['r'], d['s'], 
+                                        st.session_state.current_user, st.session_state.nickname
+                                    ])
+
+                                    # --- [새로운 시트] "작업" 시트 기록 (열 위치 변경 반영) ---
+                                    # 요청하신 위치: C(날짜), D(키워드), E(URL), F(공감), G(댓글), I(닉네임)
+                                    # 리스트 순서: [A, B, C, D, E, F, G, H, I]
+                                    target_row = [
+                                        "",          # A: 빈칸
+                                        "",          # B: 빈칸
+                                        now_str,     # C: (기존A) 날짜
+                                        d['kw'],     # D: (기존B) 키워드
+                                        d['url'],    # E: (기존C) URL
+                                        d['l'],      # F: (기존D) 공감
+                                        d['r'],      # G: (기존E) 댓글
+                                        d['s'],      # H: (기존F) 스크랩
+                                        st.session_state.nickname # I: (기존H) 닉네임
+                                    ]
+                                    target_work_sheet.append_row(target_row)
+
+                                st.success("🎊 모든 시트에 등록 완료!")
+                                time.sleep(1)
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.error(f"기록 실패: {str(e)}")
+                                st.info("새로운 스프레드시트에 '서비스 계정 이메일'이 편집자로 공유되어 있는지 확인해주세요.")
