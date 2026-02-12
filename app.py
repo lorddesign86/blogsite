@@ -24,44 +24,30 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰 관리", layout="wide")
 
-# --- 🎨 상단 짤림 방지 및 모바일 통합 디자인 CSS ---
+# --- 🎨 디자인 CSS (상단 짤림 방지 및 모바일 최적화) ---
 st.markdown("""
     <style>
-    /* 1. 상단 짤림 방지: 여백 확보 */
     .main .block-container { padding-top: 3rem !important; padding-bottom: 6rem !important; }
-    
-    /* 2. 수량 위젯: PC/모바일 공통 가로 한 줄 강제 정렬 */
     [data-testid="stMetric"] { background-color: #1e2129; padding: 5px !important; border-radius: 8px; text-align: center; border: 1px solid #333; }
     [data-testid="stMetricValue"] { font-size: 1.1rem !important; font-weight: 700 !important; color: #00ff00; }
-    [data-testid="stMetricLabel"] { font-size: 0.8rem !important; }
-
-    /* 3. 모바일 전용 최적화 */
     @media (max-width: 768px) {
-        /* 타이틀 및 상단 헤더 위치 보정 */
-        h3, h1 { margin-top: 0px !important; padding-top: 0px !important; }
-        
-        /* 작업넣기 하단 고정 버튼 */
         div.stButton > button:first-child {
             position: fixed; bottom: 15px; left: 5%; right: 5%; width: 90%; z-index: 999;
-            height: 3.5rem; background-color: #FF4B4B !important; border-radius: 12px; font-size: 18px !important; font-weight: bold;
+            height: 3.5rem; background-color: #FF4B4B !important; border-radius: 12px; font-weight: bold;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
         }
-        
-        /* 입력창 라벨 크기 축소하여 겹침 방지 */
-        .stTextInput label, .stNumberInput label { font-size: 0.75rem !important; }
-    }
-
-    /* 4. PC 버튼 스타일 */
-    @media (min-width: 769px) {
-        .stButton > button { background-color: #FF4B4B !important; height: 3rem; border-radius: 8px; font-weight: bold; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 세션 관리
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
-if 'current_user' not in st.session_state: st.session_state.current_user = None
-if 'nickname' not in st.session_state: st.session_state.nickname = ""
+# --- 🍪 로그인 유지 로직 (Session State 활용) ---
+# 새로고침 시에도 세션이 살아있는 동안은 로그인이 유지됩니다.
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = None
+if 'nickname' not in st.session_state:
+    st.session_state.nickname = ""
 
 def get_gspread_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -71,6 +57,7 @@ def get_gspread_client():
 
 col_side, col_main = st.columns([1.2, 4], gap="medium")
 
+# --- 좌측 사이드바: 로그인 섹션 ---
 with col_side:
     st.markdown(UI_TEXT["LOGIN_TITLE"])
     if not st.session_state.logged_in:
@@ -84,24 +71,27 @@ with col_side:
                 all_vals = acc_sheet.get_all_values()
                 for row in all_vals[1:]:
                     if len(row) >= 2 and str(row[0]) == u_id and str(row[1]) == u_pw:
-                        st.session_state.logged_in, st.session_state.current_user = True, u_id
+                        st.session_state.logged_in = True
+                        st.session_state.current_user = u_id
                         st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
                         st.rerun()
+                st.error("정보가 일치하지 않습니다.")
             except Exception: st.error("로그인 실패")
     else:
         st.success(f"✅ **{st.session_state.nickname}**님")
+        # 로그아웃 시 세션 초기화
         if st.button("LOGOUT", key="out_btn"):
-            st.session_state.logged_in = False
+            for key in st.session_state.keys():
+                del st.session_state[key]
             st.rerun()
         st.markdown("---")
         with st.expander("📢 공지/링크", expanded=True):
             for item in ANNOUNCEMENTS: st.markdown(f"**[{item['text']}]({item['url']})**")
 
+# --- 우측 메인: 작업 영역 ---
 if st.session_state.logged_in:
     with col_main:
-        # 상단 타이틀: 잘림 방지용 마진 포함
         st.title(f"🚀 {st.session_state.nickname} 작업등록")
-        
         try:
             client = get_gspread_client()
             sh = client.open("작업_관리_데이터베이스")
@@ -110,18 +100,16 @@ if st.session_state.logged_in:
             user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
             if user_row_idx != -1:
-                # 1. 잔여 수량 가로 한 줄 배치
-                m1, m2, m3, m4 = st.columns([1, 1, 1, 1.2]) # 간격 조절
+                # 1. 잔여 수량 가로 배치
+                m1, m2, m3, m4 = st.columns([1, 1, 1, 1.2])
                 m1.metric("공감", f"{user_data[2]}개")
                 m2.metric("댓글", f"{user_data[3]}개")
                 m3.metric("스크랩", f"{user_data[4]}개")
                 m4.metric("ID", user_data[0])
-                
                 st.divider()
                 
                 # 2. 작업 입력 영역
                 rows_data = []
-                # 헤더 라벨
                 h_col = st.columns([2, 3, 1, 1, 1])
                 headers = ["키워드", "URL (링크)", "공", "댓", "스"]
                 for i, txt in enumerate(headers): h_col[i].caption(txt)
@@ -149,5 +137,8 @@ if st.session_state.logged_in:
                             st.success(UI_TEXT["SUCCESS_MSG"])
                             time.sleep(1)
                             st.rerun()
-
-        except Exception as e: st.error(f"데이터 연동 실패")
+        except Exception: st.error("데이터 동기화 실패")
+else:
+    with col_main:
+        st.title("🚀 파우쓰 작업등록")
+        st.info("좌측 메뉴에서 로그인을 진행해 주세요. 로그인 정보는 브라우저를 닫기 전까지 유지됩니다.")
