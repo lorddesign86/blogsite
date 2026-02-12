@@ -20,7 +20,7 @@ FONT_CONFIG = {
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "15px",    # 입력창 상단 라벨 크기
-    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
+    "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
     "SUBMIT_BTN": "26px"       # 작업넣기 버튼 글자 크기
 }
 
@@ -36,12 +36,12 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS ---
+# --- 🎨 디자인 & 정렬 CSS (중괄호 이중화 처리) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
     
-    /* 로그인 상자 디자인 */
+    /* 로그인 상자 중앙 정렬용 디자인 */
     [data-testid="stForm"] {{
         border: 1px solid #444 !important;
         border-radius: 15px !important;
@@ -55,14 +55,12 @@ st.markdown(f"""
     
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
         font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
     }}
 
-    /* 잔여 수량 박스 정렬 */
     div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
     [data-testid="stMetric"] {{
         background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
@@ -72,10 +70,10 @@ st.markdown(f"""
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     
-    input {{ font-size: {FONT_CONFIG['INPUT_TEXT']} !important; }}
+    /* 입력창 글자 크기 적용 */
+    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
 
-    /* 작업넣기 버튼 대형화 */
     div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important; height: 75px !important;
         background-color: #FF4B4B !important; border-radius: 15px !important;
@@ -101,9 +99,10 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
 # --- 1. 로그인 로직 (중앙 정렬 및 엔터 로그인 적용) ---
 if not st.session_state.logged_in:
-    _, center_col, _ = st.columns([1, 1.5, 1])
+    # 화면을 3개로 나누어 가운데만 사용 (중앙 정렬)
+    _, center_col, _ = st.columns([1, 1.2, 1])
     with center_col:
-        st.write("") 
+        st.write("") # 상단 여백
         st.write("") 
         with st.form("login_form"):
             st.markdown("### 🛡️ 파우쓰 관리자 로그인")
@@ -113,7 +112,7 @@ if not st.session_state.logged_in:
             
             if login_submitted:
                 try:
-                    time.sleep(0.5) # 간헐적 연동 실패 방지 대기
+                    time.sleep(0.5) 
                     client = get_gspread_client()
                     sh = client.open("작업_관리_데이터베이스")
                     acc_sheet = sh.worksheet("Accounts")
@@ -128,7 +127,7 @@ if not st.session_state.logged_in:
                 except Exception as e:
                     st.error(f"데이터베이스 연동 실패: {str(e)}")
 else:
-    # --- 2. 메인 앱 레이아웃 (로그인 성공 시) ---
+    # --- 2. 메인 앱 레이아웃 ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -165,7 +164,6 @@ else:
 
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             
-            # 등록 후 즉시 초기화를 위해 clear_on_submit 적용
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 0.8, 0.8, 0.8])
                 for idx, label in enumerate(["키워드", "URL (필수)", "공", "댓", "스"]): h_col[idx].caption(label)
@@ -187,9 +185,9 @@ else:
                     link_errors = [f"{i+1}행" for i, d in enumerate(rows_inputs) if d['url'].strip() and not is_valid_naver_link(d['url'])]
 
                     if link_errors:
-                        st.error(f"⚠️ {', '.join(link_errors)} 링크 오류: 네이버 블로그 형식이 아닙니다.")
+                        st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
                     elif not rows_to_submit:
-                        st.warning("⚠️ 등록할 데이터를 입력해주세요.")
+                        st.warning("⚠️ 데이터를 입력해주세요.")
                     else:
                         with st.spinner("📦 처리 중..."):
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
@@ -200,13 +198,13 @@ else:
                                 acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                 acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
                                 
-                                # [H열] 닉네임 자동 기록 포함 데이터 추가
+                                # [H열 기록]
                                 for d in rows_to_submit:
                                     hist_sheet.append_row([
                                         datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                                         str(d['kw']), str(d['url']), int(d['l']), int(d['r']), int(d['s']), 
                                         st.session_state.current_user,
-                                        st.session_state.nickname # H열 닉네임
+                                        st.session_state.nickname # H열에 닉네임 자동 기록
                                     ])
                                 st.success("🎊 등록 완료! 입력창이 비워졌습니다.")
                                 time.sleep(1)
