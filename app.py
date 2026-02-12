@@ -7,7 +7,7 @@ import time
 import re
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 요청하신 최신 설정 적용
+# 📐 [FONT_CONFIG] - 요청하신 최신 설정 (상단부 고정)
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
@@ -35,22 +35,27 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS ---
+# --- 🎨 디자인 & CSS (안내 문구 제거 포함) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; }}
+    /* "Press Enter..." 안내 문구 숨기기 */
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
     small {{ display: none !important; }}
+
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
+    
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
+    
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
         font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
     }}
+
     div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
     [data-testid="stMetric"] {{
         background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
@@ -59,8 +64,10 @@ st.markdown(f"""
     }}
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
+    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
+
     div.stButton > button:first-child[kind="primary"] {{
         width: 250px !important; height: 75px !important;
         background-color: #FF4B4B !important; border-radius: 15px !important;
@@ -80,15 +87,18 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 1. 로그인 화면 ---
+# --- 1. 로그인 화면 (중앙 정렬 및 엔터 로그인) ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
+        st.write("") 
         with st.form("login_form"):
             st.markdown("### 🛡️ 로그인")
             u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
             u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
-            if st.form_submit_button("LOGIN"):
+            login_submitted = st.form_submit_button("LOGIN")
+            
+            if login_submitted:
                 try:
                     client = get_gspread_client()
                     sh = client.open("작업_관리_데이터베이스")
@@ -112,6 +122,7 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
+    # 상단 헤더
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
@@ -128,6 +139,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
+            # 실시간 잔여 수량 섹션
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:15px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
@@ -136,6 +148,7 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
+            # 작업 일괄 등록 섹션
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:15px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             with st.form("work_registration_form", clear_on_submit=True):
                 h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
@@ -145,29 +158,32 @@ else:
                 for i in range(10):
                     r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
                     kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed")
-                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="https://~")
+                    url = r_col[1].text_input(f"u_{i}", label_visibility="collapsed", placeholder="(링크 입력 https://~)")
+                    # 수량 조절 버튼(+/-) 포함
                     l = r_col[2].number_input(f"l_{i}", min_value=0, step=1, label_visibility="collapsed")
                     r = r_col[3].number_input(f"r_{i}", min_value=0, step=1, label_visibility="collapsed")
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": url, "l": l, "r": r, "s": s})
 
+                # 🚀 [핵심] 수량 차감 및 이중 시트 기록 로직
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
                     rows_to_submit = [d for d in rows_inputs if d['url'].strip() and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
-                        with st.spinner("수량 차감 및 시트 기록 중..."):
+                        with st.spinner("잔여 수량 차감 및 시트 기록 중..."):
                             try:
-                                # 1. 수량 계산 및 차감 로직
+                                # 수량 계산
                                 total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
                                 rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                                 if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                                    # ✅ 1. Accounts 시트 수량 차감
                                     acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                                     acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                     acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                                    # 2. 외부 "작업" 시트 연동 (ID: 1uqAHj...)
+                                    # ✅ 2. 새로운 외부 시트 연동 (ID: 1uqAHj...)
                                     target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                                     target_work_sheet = target_sh.worksheet("작업")
                                     
