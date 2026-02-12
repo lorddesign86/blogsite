@@ -170,7 +170,7 @@ else:
                     link_errors = [f"{i+1}행" for i, d in enumerate(rows_inputs) if d['url'].strip() and not is_valid_naver_link(d['url'])]
 
                     if link_errors: st.error(f"⚠️ {', '.join(link_errors)} 링크 오류")
-                    elif not rows_to_submit: st.warning("⚠️ 데이터를 입력해주세요.")
+                    elif not rows_to_submit: st.warning("⚠️ 작업하실 내용을 입력해주세요.")
                     else:
                         rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
                         total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
