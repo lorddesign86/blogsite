@@ -19,9 +19,9 @@ FONT_CONFIG = {
     "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "15px",    # 입력창 상단 라벨 크기
+    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기 (KeyError 방지용)
-    "SUBMIT_BTN": "26px"       # 작업넣기 버튼 글자 크기
+    "SUBMIT_BTN": "40px"       # 작업넣기 버튼 글자 크기
 }
 
 # --- 📢 서비스 링크 ---
@@ -105,7 +105,7 @@ if not st.session_state.logged_in:
         st.write("") # 상단 여백
         st.write("") 
         with st.form("login_form"):
-            st.markdown("### 🛡️ 파우쓰 관리자 로그인")
+            st.markdown("### 🛡️ 로그인")
             u_id = st.text_input("ID", placeholder="아이디를 입력하세요")
             u_pw = st.text_input("PW", type="password", placeholder="비밀번호를 입력하세요")
             login_submitted = st.form_submit_button("LOGIN")
@@ -141,7 +141,7 @@ else:
     charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
-            <span class="main-title">🚀 {st.session_state.nickname} 작업등록</span>
+            <span class="main-title">🚀 {st.session_state.nickname}님의 작업등록</span>
             <a href="{charge_url}" target="_blank" class="charge-link">💰 충전요청하기</a>
         </div>
     """, unsafe_allow_html=True)
