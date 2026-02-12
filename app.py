@@ -7,11 +7,11 @@ import re
 import requests
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 사용자 최종 설정 (절대 고정)
+# 📐 [FONT_CONFIG] - 사용자님 최종 설정 (절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "25px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "45px"       # 작업넣기 버튼 글자 크기
+    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기
 }
 
 ANNOUNCEMENTS = [
@@ -40,35 +40,63 @@ st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
     
-    /* 🚀 하단 작업넣기 버튼 고정 및 사이즈 (최종본 유지) */
+    /* 🚀 하단 작업넣기 버튼 고정 및 사이즈 (최종본 고정) */
     div.stButton > button:first-child[kind="primary"] {{
-        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-        width: 80% !important; max-width: 800px; height: 110px !important;
-        background-color: #FF4B4B !important; border-radius: 20px !important;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 9999;
+        position: fixed; 
+        bottom: 30px; 
+        left: 50%; 
+        transform: translateX(-50%);
+        width: 85% !important; 
+        max-width: 800px; 
+        height: 110px !important;
+        background-color: #FF4B4B !important; 
+        border-radius: 20px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+        z-index: 9999;
         border: 3px solid white !important;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important;
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
+        font-weight: 900 !important;
         letter-spacing: 2px;
     }}
+
+    /* "Press Enter..." 안내 문구 숨기기 */
+    [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
+    small {{ display: none !important; }}
 
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
+    
     .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    [data-testid="stMetric"] {{ background-color: #1e2129; border-radius: 10px; border: 1px solid #444; padding: 15px 10px !important; }}
+    
+    .charge-link {{
+        display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
+        color: white !important; text-decoration: none; border-radius: 8px;
+        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
+    [data-testid="stMetric"] {{
+        background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
+        padding: 15px 10px !important; min-height: 110px;
+        display: flex; flex-direction: column; justify-content: center;
+    }}
+    [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
+    [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
+    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수 (사용자 정보 직접 적용)
+# 📢 텔레그램 알림 함수 (사용자 정보 직접 고정)
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
-        chat_id = "496784884"
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
+        chat_id = "496784884" #
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
@@ -103,7 +131,7 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 2. 메인 앱 레이아웃 (디자인 고정) ---
+    # --- 2. 메인 앱 레이아웃 (디자인 절대 유지) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         if st.button("LOGOUT"):
@@ -151,7 +179,9 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                if st.form_submit_button("🔥 작업넣기", type="primary"):
+                submitted = st.form_submit_button("🔥 작업넣기", type="primary")
+
+                if submitted:
                     rows_to_submit = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                     if rows_to_submit:
                         try:
@@ -159,7 +189,7 @@ else:
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                             if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                                # 1. 시트 수량 차감
+                                # 1. 수량 차감
                                 acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                                 acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                 acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
@@ -178,7 +208,7 @@ else:
                                     hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                     target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
                                 
-                                # ✅ [요청 반영] 텔레그램 메시지 형식 (사용자/링크/수량)
+                                # ✅ [요청 반영] 텔레그램 메시지 상세화
                                 msg = (
                                     f"🔔 [신규 작업 알림]\n\n"
                                     f"👤 사용자 : {st.session_state.nickname}\n"
