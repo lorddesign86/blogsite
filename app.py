@@ -10,8 +10,8 @@ import requests
 # 📐 [FONT_CONFIG] - 사용자님 최종 설정 (수치 절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
@@ -19,9 +19,9 @@ FONT_CONFIG = {
     "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기 (키워드, URL 등)
+    "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기
+    "SUBMIT_BTN": "40px"       # 🔥 작업넣기 버튼 글자 크기 (요청에 따라 살짝 하향)
 }
 
 ANNOUNCEMENTS = [
@@ -35,58 +35,70 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (표 외부 버튼 강제 고정 로직) ---
+# --- 🎨 디자인 & 정렬 CSS ---
 st.markdown(f"""
     <style>
     .main .block-container {{ 
         padding-top: 2.5rem !important; 
-        padding-bottom: 200px !important; /* 버튼 공간 확보 */
+        padding-bottom: 180px !important; 
     }}
     
-    /* 1. 글자 크기 강제 적용 (우선순위 상향) */
-    section[data-testid="stSidebar"] .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; }}
-    section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
+    /* 사이드바 디자인 복구 */
+    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; margin-bottom: 15px !important; }}
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; line-height: 1.8 !important; }}
     
+    /* 로그아웃 버튼 스타일 */
+    [data-testid="stSidebar"] button {{
+        width: 100% !important;
+        height: 50px !important;
+    }}
+    [data-testid="stSidebar"] button p {{ 
+        font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; 
+        font-weight: bold !important;
+    }}
+
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     
-    /* 라벨(TABLE_HEADER) 40px 강제 적용 */
-    [data-testid="stVerticalBlock"] .stCaption div p {{ 
-        font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
-        color: #aaa !important; font-weight: bold !important;
-    }}
-
-    /* 2. 🚀 [해결] 표 외부로 빠진 '작업넣기' 버튼을 화면 바닥에 무조건 고정 */
-    /* Form 밖에 있으므로 Streamlit의 간섭을 받지 않고 브라우저 바닥에 고정됩니다. */
-    .stButton > button {{
+    /* 🚀 작업넣기 버튼 사이즈 최적화 및 하단 고정 */
+    div.stButton > button[kind="secondary"], div.stButton > button[kind="primary"] {{
         position: fixed !important;
-        bottom: 30px !important;
+        bottom: 25px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        width: 90% !important;
-        max-width: 800px !important;
-        height: 120px !important;
+        width: 85% !important;
+        max-width: 650px !important; /* 너비 소폭 축소 */
+        height: 90px !important;    /* 높이 소폭 축소 */
         background-color: #FF4B4B !important;
         color: white !important;
         border-radius: 20px !important;
-        box-shadow: 0 -10px 50px rgba(0,0,0,0.8) !important;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.7) !important;
         z-index: 1000000 !important;
-        border: 4px solid white !important;
+        border: 3px solid white !important;
     }}
-    .stButton > button p {{
+    div.stButton > button p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important;
         font-weight: 900 !important;
     }}
 
-    /* 기타 불필요 요소 숨기기 */
+    /* 테이블 라벨 40px 강제 적용 */
+    .stCaption div p {{ 
+        font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
+        color: #aaa !important; font-weight: bold !important;
+    }}
+
+    /* 메트릭 및 입력창 */
+    [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
+    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
+    
     small, .stDeployButton {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
-        chat_id = "496784884"
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
+        chat_id = "496784884" #
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
@@ -120,16 +132,23 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
+    # --- 1. 사이드바 (로그아웃 버튼 복구) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
-        if st.button("LOGOUT"):
+        if st.button("LOGOUT"): #
             st.session_state.logged_in = False
             st.rerun()
         st.divider()
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
+    # --- 2. 메인 헤더 (충전하기 버튼 복구) ---
+    header_col1, header_col2 = st.columns([4, 1])
+    with header_col1:
+        st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
+    with header_col2:
+        #
+        st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
     
     try:
         client = get_gspread_client()
@@ -147,10 +166,13 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # ✅ [변경] st.form을 사용하여 데이터 입력만 받고, 버튼은 밖으로 뺍니다.
+            # --- 3. 작업 등록 표 ---
             rows_inputs = []
+            st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
+            
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-            for idx, label in enumerate(["키워드", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
+            labels = ["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]
+            for idx, label in enumerate(labels): h_col[idx].caption(label)
 
             for i in range(10):
                 r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
@@ -161,12 +183,12 @@ else:
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # ✅ 🚀 [해결] 버튼을 표(Form) 밖으로 독립시켜서 브라우저 바닥에 고정
-            if st.button("🔥 작업넣기", type="primary"):
-                rows_to_submit = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
-                if rows_to_submit:
+            # 🚀 최적화된 하단 고정 버튼
+            if st.button("🔥 작업넣기"): #
+                valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
+                if valid_rows:
                     try:
-                        total_l, total_r, total_s = sum(d['l'] for d in rows_to_submit), sum(d['r'] for d in rows_to_submit), sum(d['s'] for d in rows_to_submit)
+                        total_l, total_r, total_s = sum(d['l'] for d in valid_rows), sum(d['r'] for d in valid_rows), sum(d['s'] for d in valid_rows)
                         rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                         if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
@@ -179,9 +201,9 @@ else:
                             url_col = target_ws.col_values(5)
                             last_idx = len(url_col) + 1
                             
-                            url_list_str = "\n".join([f"- {d['url']}" for d in rows_to_submit])
+                            url_list_str = "\n".join([f"- {d['url']}" for d in valid_rows])
                             
-                            for i, d in enumerate(rows_to_submit):
+                            for i, d in enumerate(valid_rows):
                                 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                                 hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                 target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
@@ -190,6 +212,6 @@ else:
                             st.success("🎊 모든 등록 완료!")
                             time.sleep(1)
                             st.rerun()
-                        else: st.error("❌ 잔여 수량 부족!")
+                        else: st.error("❌ 잔여 수량이 부족합니다.")
                     except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
