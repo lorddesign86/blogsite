@@ -10,8 +10,8 @@ import requests
 # 📐 [FONT_CONFIG] - 사용자님 최종 설정 (수치 절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
@@ -40,29 +40,31 @@ st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
     
-    /* ✅ 1. 사이드바 및 로그아웃 버튼 강제 노출 (image_87327d.png 빨간 상자 영역) */
+    /* ✅ 1. 사이드바 및 로그아웃 버튼 강제 노출 (빨간 상자 영역 최우선 순위) */
     .sidebar-id {{ 
         font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; 
         font-weight: bold !important; 
         color: #2ecc71 !important; 
-        margin-bottom: 10px !important;
+        margin-bottom: 5px !important;
         display: block !important;
     }}
     
-    /* 사이드바 내부의 모든 버튼(LOGOUT) 스타일 강제 적용 */
+    /* 사이드바 내부 로그아웃 버튼 스타일 강제 적용 */
     [data-testid="stSidebar"] .stButton > button {{
         width: 100% !important;
         height: 45px !important;
         background-color: #31333F !important;
         color: white !important;
-        border: 2px solid #ff4b4b !important; /* 가시성 확보를 위한 붉은 테두리 */
+        border: 2px solid #ff4b4b !important; /* 가시성 확보용 테두리 */
         border-radius: 8px !important;
         display: block !important;
         visibility: visible !important;
+        z-index: 99999 !important;
     }}
     [data-testid="stSidebar"] .stButton > button p {{ 
         font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; 
         font-weight: bold !important;
+        color: white !important;
     }}
     
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ 
@@ -86,7 +88,7 @@ st.markdown(f"""
         font-weight: 800 !important; color: #00ff00 !important; 
     }}
 
-    /* ✅ 3. 슬림해진 하단 고정 작업넣기 버튼 */
+    /* ✅ 3. 하단 고정 작업넣기 버튼 (슬림화) */
     div.stButton > button[kind="secondary"], div.stButton > button[kind="primary"] {{
         position: fixed !important; bottom: 25px !important; left: 50% !important;
         transform: translateX(-50%) !important;
@@ -139,7 +141,7 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 (로그아웃 버튼 확실히 생성) ---
+    # --- 1. 사이드바 (로그아웃 버튼 위치 사수) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         # 닉네임 바로 아래 LOGOUT 버튼 배치
@@ -173,16 +175,15 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # --- 3. 작업 일괄 등록 (표 구조 완벽 통합) ---
+            # --- 3. 작업 일괄 등록 (표 구조 정갈하게 복원) ---
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             
-            # 표 헤더 라벨 (40px)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
             labels = ["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]
             for idx, label in enumerate(labels): h_col[idx].caption(label)
 
-            # 10개 행 (image_85d1fa.png 스타일 정갈한 표)
+            # 10개 행 생성 (표 디자인 통합)
             for i in range(10):
                 r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
                 kw = r_col[0].text_input(f"k_{i}", label_visibility="collapsed")
@@ -192,7 +193,7 @@ else:
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 슬림해진 하단 고정 버튼 (표 밖에서 제어)
+            # 🔥 슬림해진 하단 고정 작업넣기 버튼
             if st.button("🔥 작업넣기"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
