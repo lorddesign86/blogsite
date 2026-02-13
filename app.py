@@ -211,9 +211,9 @@ else:
                                 # ✅ [요청 반영] 텔레그램 메시지 상세화
                                 msg = (
                                     f"🔔 [크몽 신규작업 알림]\n"
-                                    f"닉네임 : {st.session_state.nickname}\n"
-                                    f"링크 :\n{url_list_str}\n"
-                                    f"수량 : 공{total_l} / 댓{total_r} / 스{total_s}"
+                                    f"{st.session_state.nickname}\n"
+                                    f"\n{url_list_str}\n"
+                                    f"공{total_l} / 댓{total_r} / 스{total_s}"
                                 )
                                 send_telegram_msg(msg)
                                 
