@@ -10,8 +10,8 @@ import requests
 # 📐 [FONT_CONFIG] - 사용자님 최종 설정 (절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
@@ -39,22 +39,23 @@ st.set_page_config(page_title="파우쓰", layout="wide")
 st.markdown(f"""
     <style>
     /* 하단 버튼이 콘텐츠를 가리지 않도록 전체 여백 확보 */
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 200px !important; }}
     
-    /* 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (PC/모바일 공통) */
+    /* 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (Fixed) */
     div.stButton > button:first-child[kind="primary"] {{
         position: fixed !important; 
-        bottom: 30px !important; 
+        bottom: 50px !important;     /* 모바일 툴바를 고려해 위치 살짝 상향 */
         left: 50% !important; 
         transform: translateX(-50%) !important;
-        width: 85% !important; 
+        width: 90% !important; 
         max-width: 800px !important; 
         height: 110px !important;
         background-color: #FF4B4B !important; 
         border-radius: 20px !important;
         box-shadow: 0 10px 50px rgba(0,0,0,0.8) !important; 
-        z-index: 999999 !important; /* 레이어 최상단 고정 */
+        z-index: 9999999 !important; /* 모든 요소보다 위에 배치 */
         border: 3px solid white !important;
+        display: block !important;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
@@ -181,6 +182,7 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
+                # 🔥 하단 강제 고정 거대 버튼
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
@@ -202,7 +204,6 @@ else:
                                 url_col = target_ws.col_values(5)
                                 last_idx = len(url_col) + 1
                                 
-                                # ✅ 알림용 링크 리스트 생성
                                 url_list_str = "\n".join([f"- {d['url']}" for d in rows_to_submit])
                                 
                                 for i, d in enumerate(rows_to_submit):
@@ -210,7 +211,7 @@ else:
                                     hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                     target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
                                 
-                                # ✅ [요청 반영] 텔레그램 메시지 상세화
+                                # 3. 텔레그램 알림 상세화
                                 msg = (
                                     f"🔔 [크몽 신규작업 알림]\n"
                                     f"{st.session_state.nickname}\n"
