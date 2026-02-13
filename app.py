@@ -19,7 +19,7 @@ FONT_CONFIG = {
     "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
-    "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기 (키워드, URL 등)
+    "TABLE_HEADER": "20px",    # 입력창 상단 라벨 크기 (키워드, URL 등)
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
     "SUBMIT_BTN": "35px"       # 🔥 작업넣기 버튼 글자 크기
 }
