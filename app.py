@@ -12,7 +12,7 @@ import requests
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
     "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
-    "LOGOUT_TEXT": "16px",     # 로그아웃 텍스트 링크 크기
+    "LOGOUT_TEXT": "16px",     # 로그아웃 텍스트 링크 크기 (작게)
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (원래대로 복구)
+    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (거대 디자인)
 }
 
 ANNOUNCEMENTS = [
@@ -35,52 +35,60 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (원래의 거대 디자인 완벽 복구) ---
+# --- 🎨 디자인 & 정렬 CSS (영역 분리 및 버튼 겹침 완벽 차단) ---
 st.markdown(f"""
     <style>
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 200px !important; }}
+    /* 전체 콘텐츠 하단 여백 확보 */
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 220px !important; }}
     
-    /* ✅ 1. 사이드바 (닉네임 옆 작은 로그아웃 링크) */
+    /* ✅ 1. 사이드바 (닉네임 옆 아주 작은 텍스트 링크 로그아웃) */
     .sidebar-id {{ 
         font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; 
         font-weight: bold !important; 
         color: #2ecc71 !important; 
         display: inline-block !important;
+        margin-right: 8px !important;
     }}
-    [data-testid="stSidebar"] .stButton > button {{
+    
+    /* 사이드바 전용 버튼 스타일 (메인 버튼과 중복 차단) */
+    section[data-testid="stSidebar"] .stButton > button {{
         background: none !important; border: none !important; padding: 0 !important;
         color: #888 !important; text-decoration: underline !important;
         cursor: pointer !important; height: auto !important; width: auto !important;
         display: inline-block !important; vertical-align: middle !important;
+        box-shadow: none !important; position: static !important;
     }}
-    [data-testid="stSidebar"] .stButton > button p {{ font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; margin: 0 !important; }}
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
+    section[data-testid="stSidebar"] .stButton > button p {{ 
+        font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; 
+        margin: 0 !important; 
+    }}
 
-    /* ✅ 2. 메인 디자인 (40px 헤더 등 원래 수치 강제 적용) */
+    /* ✅ 2. 메인 디자인 (상단 헤더 및 표 구조 복원) */
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
-    .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     [data-testid="stVerticalBlock"] .stCaption div p {{ 
         font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
         color: #ddd !important; font-weight: 900 !important;
     }}
 
-    /* ✅ 3. 🔥 거대 작업넣기 버튼 복구 (image_86cda3.png 스타일) */
-    div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] {{
+    /* ✅ 3. 🔥 메인 화면 하단 거대 작업넣기 버튼 (사이드바 버튼과 완전 분리) */
+    /* section[data-testid="stSidebar"]에 속하지 않은 메인 버튼만 선택 */
+    .main div.stButton > button[kind="primary"], .main div.stButton > button[kind="secondary"] {{
         position: fixed !important; 
         bottom: 30px !important; 
         left: 50% !important;
         transform: translateX(-50%) !important;
         width: 85% !important; 
         max-width: 800px !important; 
-        height: 110px !important; /* 원래의 거대한 높이로 복구 */
+        height: 110px !important; /* 거대한 높이 복구 */
         background-color: #FF4B4B !important; 
         color: white !important;
         border-radius: 20px !important; 
         box-shadow: 0 -10px 50px rgba(0,0,0,0.8) !important;
         z-index: 1000000 !important; 
         border: 3px solid white !important;
+        display: block !important;
     }}
-    div.stButton > button p {{ 
+    .main div.stButton > button p {{ 
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
         font-weight: 900 !important; 
         letter-spacing: 2px !important;
@@ -129,8 +137,10 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
+    # --- 1. 사이드바 (로그아웃 버튼: 작은 텍스트 링크) ---
     with st.sidebar:
-        col_id, col_log = st.columns([2, 1])
+        # 닉네임 옆에 로그아웃을 나란히 배치
+        col_id, col_log = st.columns([2.5, 1])
         with col_id:
             st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         with col_log:
@@ -141,7 +151,7 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 메인 헤더 (충전 버튼 복구) ---
+    # --- 2. 메인 헤더 ---
     h_col1, h_col2 = st.columns([4, 1.2])
     with h_col1:
         st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
@@ -156,7 +166,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f'<div class="remain-title">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold; margin-bottom:10px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
             m_cols[1].metric("댓글", f"{user_data[3]}")
@@ -164,7 +174,7 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # --- 작업 일괄 등록 (표 구조 완벽 복구) ---
+            # --- 3. 작업 일괄 등록 (표 구조 완벽 복구) ---
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
@@ -180,8 +190,8 @@ else:
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 [복구] 거대한 작업넣기 버튼
-            if st.button("🔥 작업넣기"):
+            # 🔥 [복구] 거대한 메인 하단 고정 버튼 (사이드바 버튼과 절대 안 겹침)
+            if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
                     try:
