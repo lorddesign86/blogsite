@@ -12,7 +12,7 @@ import requests
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
     "SIDEBAR_LINKS": "20px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
-    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
+    "LOGOUT_BTN": "22px",      # 로그아웃 버튼 크기 상향
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
@@ -35,12 +35,16 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (로그아웃 버튼 강제 가시화 및 표 구조 복원) ---
+# --- 🎨 디자인 & 정렬 CSS (시스템 설정을 뚫는 강제 적용 로직) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
     
-    /* ✅ 1. 사이드바 및 로그아웃 버튼 절대 노출 설정 */
+    /* ✅ 1. 사이드바 로그아웃 버튼 강제 가시화 (최우선 순위) */
+    [data-testid="stSidebar"] {{
+        background-color: #1a1c24 !important;
+    }}
+    
     .sidebar-id {{ 
         font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; 
         font-weight: bold !important; 
@@ -49,31 +53,30 @@ st.markdown(f"""
         display: block !important;
     }}
     
-    /* [중요] 사이드바 버튼(특히 LOGOUT) 스타일 강제 적용 */
+    /* 사이드바 내부 로그아웃 버튼 스타일 (강제 노출) */
     [data-testid="stSidebar"] .stButton > button {{
         width: 100% !important;
-        height: 50px !important;
-        background-color: #444 !important; /* 배경색을 어두운 회색으로 명시 */
+        height: 55px !important;
+        background-color: #FF4B4B !important; /* 배경색을 빨간색으로 강제 지정 */
         color: white !important;
-        border: 2px solid #ff4b4b !important; /* 붉은색 테두리로 존재감 확인 */
-        border-radius: 8px !important;
+        border: 2px solid white !important;
+        border-radius: 12px !important;
         display: block !important;
         visibility: visible !important;
-        opacity: 1 !important;
         z-index: 99999 !important;
+        margin-bottom: 20px !important;
     }}
     [data-testid="stSidebar"] .stButton > button p {{ 
         font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; 
-        font-weight: bold !important;
+        font-weight: 900 !important;
         color: white !important;
     }}
     
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ 
         font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; 
-        line-height: 1.8 !important;
     }}
 
-    /* ✅ 2. 메인 화면 텍스트 크기 및 레이아웃 강제 적용 */
+    /* ✅ 2. 메인 화면 텍스트 크기 및 표 구조 강제 고정 */
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     
@@ -81,7 +84,7 @@ st.markdown(f"""
     [data-testid="stVerticalBlock"] .stCaption div p {{ 
         font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
         color: #ddd !important; 
-        font-weight: bold !important;
+        font-weight: 900 !important;
     }}
     
     /* 잔여 수량 수치 메트릭 */
@@ -108,8 +111,8 @@ st.markdown(f"""
 
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
-        chat_id = "496784884" #
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
+        chat_id = "496784884"
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
@@ -143,7 +146,7 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 (LOGOUT 버튼 물리적 배치 보강) ---
+    # --- 1. 사이드바 (LOGOUT 버튼 물리적 배치 사수) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
         # 로그아웃 버튼을 닉네임 바로 아래에 생성
@@ -154,7 +157,7 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 2. 메인 헤더 (충전 버튼 우측 고정) ---
+    # --- 2. 메인 헤더 (충전 버튼 복구) ---
     h_col1, h_col2 = st.columns([4, 1.2])
     with h_col1:
         st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
@@ -181,7 +184,7 @@ else:
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             
-            # 표 헤더 라벨 (40px)
+            # 표 헤더 라벨 (40px 강제 적용 영역)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
             labels = ["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]
             for idx, label in enumerate(labels):
