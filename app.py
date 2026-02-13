@@ -35,67 +35,64 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (하단 버튼 강제 고정 로직 보강) ---
+# --- 🎨 디자인 & 정렬 CSS (모바일 하단 강제 고정 로직 대폭 강화) ---
 st.markdown(f"""
     <style>
-    /* 하단 버튼이 콘텐츠를 가리지 않도록 전체 여백 확보 */
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 200px !important; }}
+    /* 1. 하단 버튼이 콘텐츠를 가리지 않도록 전체 여백 대폭 확보 */
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
     
-    /* 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (Fixed) */
-    div.stButton > button:first-child[kind="primary"] {{
+    /* 2. 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (Fixed) */
+    /* 모바일 브라우저 환경에서 씹히지 않도록 !important와 높은 z-index 부여 */
+    [data-testid="stForm"] div.stButton > button:first-child[kind="primary"] {{
         position: fixed !important; 
-        bottom: 50px !important;     /* 모바일 툴바를 고려해 위치 살짝 상향 */
+        bottom: 25px !important;    /* 바닥에서의 높이 */
         left: 50% !important; 
         transform: translateX(-50%) !important;
-        width: 90% !important; 
+        width: 90% !important;      /* 모바일 화면 너비 대응 */
         max-width: 800px !important; 
         height: 110px !important;
         background-color: #FF4B4B !important; 
         border-radius: 20px !important;
         box-shadow: 0 10px 50px rgba(0,0,0,0.8) !important; 
-        z-index: 9999999 !important; /* 모든 요소보다 위에 배치 */
+        z-index: 999999 !important; /* 최상단 레이어 고정 */
         border: 3px solid white !important;
-        display: block !important;
+        visibility: visible !important;
     }}
-    div.stButton > button:first-child[kind="primary"] p {{
+    
+    /* 버튼 내부 텍스트 스타일 */
+    [data-testid="stForm"] div.stButton > button:first-child[kind="primary"] p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
         font-weight: 900 !important;
         letter-spacing: 2px !important;
         line-height: 1 !important;
     }}
 
-    /* "Press Enter..." 안내 문구 숨기기 */
+    /* "Press Enter..." 등 불필요한 안내 문구 숨기기 */
     [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
     small {{ display: none !important; }}
 
+    /* 사이드바 및 헤더 스타일 (사용자 최종 설정 유지) */
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
     [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
-    
-    .header-wrapper {{ display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }}
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    
     .charge-link {{
         display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
         color: white !important; text-decoration: none; border-radius: 8px;
         font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
     }}
-
-    div[data-testid="stHorizontalBlock"] {{ align-items: stretch !important; }}
     [data-testid="stMetric"] {{
         background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
         padding: 15px 10px !important; min-height: 110px;
-        display: flex; flex-direction: column; justify-content: center;
     }}
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 📢 텔레그램 알림 함수 (사용자 정보 직접 고정)
+# 📢 텔레그램 알림 함수 (사용자 정보 고정)
 def send_telegram_msg(message):
     try:
         token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
@@ -182,7 +179,7 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                # 🔥 하단 강제 고정 거대 버튼
+                # 🔥 작업넣기 버튼 (상단 CSS에서 fixed 강제 고정)
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
