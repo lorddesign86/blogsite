@@ -10,8 +10,8 @@ import requests
 # 📐 [FONT_CONFIG] - 사용자님 최종 설정 (수치 절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
-    "SIDEBAR_LINKS": "20px",   # 사이드바 서비스 링크 글자 크기
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "40px"       # 🔥 작업넣기 버튼 글자 크기 (요청에 따라 살짝 하향)
+    "SUBMIT_BTN": "40px"       # 🔥 작업넣기 버튼 글자 크기 (요청에 따라 소폭 하향)
 }
 
 ANNOUNCEMENTS = [
@@ -35,44 +35,44 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS ---
+# --- 🎨 디자인 & 정렬 CSS (버튼 사이즈 최적화 및 복구) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ 
         padding-top: 2.5rem !important; 
-        padding-bottom: 180px !important; 
+        padding-bottom: 200px !important; 
     }}
     
-    /* 사이드바 디자인 복구 */
-    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; margin-bottom: 15px !important; }}
+    /* 사이드바 글자 크기 및 로그아웃 버튼 복구 [cite: 2025-08-09] */
+    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; margin-bottom: 10px !important; }}
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; line-height: 1.8 !important; }}
     
-    /* 로그아웃 버튼 스타일 */
+    /* 로그아웃 버튼 스타일 강제 적용 */
     [data-testid="stSidebar"] button {{
         width: 100% !important;
-        height: 50px !important;
+        height: 45px !important;
     }}
     [data-testid="stSidebar"] button p {{ 
         font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; 
         font-weight: bold !important;
     }}
 
-    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
+    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; display: inline-block !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     
-    /* 🚀 작업넣기 버튼 사이즈 최적화 및 하단 고정 */
+    /* 🚀 작업넣기 버튼 사이즈 최적화 (축소 반영) */
     div.stButton > button[kind="secondary"], div.stButton > button[kind="primary"] {{
         position: fixed !important;
         bottom: 25px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        width: 85% !important;
-        max-width: 650px !important; /* 너비 소폭 축소 */
-        height: 90px !important;    /* 높이 소폭 축소 */
+        width: 80% !important;      /* 너비 축소 */
+        max-width: 600px !important; /* 최대 너비 제한 */
+        height: 90px !important;     /* 높이 축소 */
         background-color: #FF4B4B !important;
         color: white !important;
         border-radius: 20px !important;
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.7) !important;
+        box-shadow: 0 -10px 50px rgba(0,0,0,0.8) !important;
         z-index: 1000000 !important;
         border: 3px solid white !important;
     }}
@@ -81,24 +81,25 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* 테이블 라벨 40px 강제 적용 */
+    /* 표 라벨 40px 강제 고정 */
     .stCaption div p {{ 
         font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
         color: #aaa !important; font-weight: bold !important;
     }}
 
-    /* 메트릭 및 입력창 */
+    /* 잔여 수량 메트릭 디자인 */
+    [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     
+    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     small, .stDeployButton {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
-        chat_id = "496784884" #
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
+        chat_id = "496784884"
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
@@ -132,23 +133,22 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 (로그아웃 버튼 복구) ---
+    # --- 1. 사이드바 (LOGOUT 버튼 복구) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
-        if st.button("LOGOUT"): #
+        if st.button("LOGOUT"):
             st.session_state.logged_in = False
             st.rerun()
         st.divider()
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 2. 메인 헤더 (충전하기 버튼 복구) ---
+    # --- 2. 메인 헤더 (충전요청 버튼 복구) ---
     header_col1, header_col2 = st.columns([4, 1])
     with header_col1:
         st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
     with header_col2:
-        #
-        st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
     
     try:
         client = get_gspread_client()
@@ -166,7 +166,7 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # --- 3. 작업 등록 표 ---
+            # --- 3. 작업 일괄 등록 표 ---
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             
@@ -183,8 +183,8 @@ else:
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🚀 최적화된 하단 고정 버튼
-            if st.button("🔥 작업넣기"): #
+            # 🔥 [해결] 적절한 사이즈의 하단 고정 버튼
+            if st.button("🔥 작업넣기"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
                     try:
