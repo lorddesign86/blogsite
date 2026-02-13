@@ -10,8 +10,8 @@ import requests
 # 📐 [FONT_CONFIG] - 사용자님 최종 설정 (절대 고정)
 # ==========================================
 FONT_CONFIG = {
-    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
+    "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기
+    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
@@ -35,30 +35,32 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (최종 설정 고유 유지 + 하단 버튼 고정) ---
+# --- 🎨 디자인 & 정렬 CSS (하단 버튼 강제 고정 로직 보강) ---
 st.markdown(f"""
     <style>
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
+    /* 하단 버튼이 콘텐츠를 가리지 않도록 전체 여백 확보 */
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
     
-    /* 🚀 하단 작업넣기 버튼 고정 및 사이즈 (최종본 고정) */
+    /* 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (PC/모바일 공통) */
     div.stButton > button:first-child[kind="primary"] {{
-        position: fixed; 
-        bottom: 30px; 
-        left: 50%; 
-        transform: translateX(-50%);
+        position: fixed !important; 
+        bottom: 30px !important; 
+        left: 50% !important; 
+        transform: translateX(-50%) !important;
         width: 85% !important; 
-        max-width: 800px; 
+        max-width: 800px !important; 
         height: 110px !important;
         background-color: #FF4B4B !important; 
         border-radius: 20px !important;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-        z-index: 9999;
+        box-shadow: 0 10px 50px rgba(0,0,0,0.8) !important; 
+        z-index: 999999 !important; /* 레이어 최상단 고정 */
         border: 3px solid white !important;
     }}
     div.stButton > button:first-child[kind="primary"] p {{
         font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
         font-weight: 900 !important;
-        letter-spacing: 2px;
+        letter-spacing: 2px !important;
+        line-height: 1 !important;
     }}
 
     /* "Press Enter..." 안내 문구 숨기기 */
@@ -95,8 +97,8 @@ st.markdown(f"""
 # 📢 텔레그램 알림 함수 (사용자 정보 직접 고정)
 def send_telegram_msg(message):
     try:
-        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU" #
-        chat_id = "496784884" #
+        token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
+        chat_id = "496784884"
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
