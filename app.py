@@ -11,12 +11,12 @@ import requests
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "20px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
-    "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
+    "METRIC_LABEL": "20px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기 (키워드, URL 등)
