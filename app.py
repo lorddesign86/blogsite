@@ -7,12 +7,12 @@ import re
 import requests
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 사용자님 최종 설정 (절대 고정)
+# 📐 [FONT_CONFIG] - 사용자님 최종 설정 (수치 절대 고정)
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
     "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
-    "LOGOUT_TEXT": "16px",     # 로그아웃 텍스트 링크 크기 (작게)
+    "LOGOUT_TEXT": "16px",     # 로그아웃 텍스트 링크 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (거대 디자인)
+    "SUBMIT_BTN": "45px"       # 🔥 작업넣기 버튼 글자 크기 (거대 사이즈)
 }
 
 ANNOUNCEMENTS = [
@@ -35,43 +35,44 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (영역 분리 및 버튼 겹침 완벽 차단) ---
+# --- 🎨 디자인 & 정렬 CSS (충돌 해결 및 영역 완전 분리) ---
 st.markdown(f"""
     <style>
-    /* 전체 콘텐츠 하단 여백 확보 */
+    /* 전체 레이아웃 하단 여백 */
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 220px !important; }}
     
-    /* ✅ 1. 사이드바 (닉네임 옆 아주 작은 텍스트 링크 로그아웃) */
-    .sidebar-id {{ 
+    /* ✅ 1. 사이드바 영역 전용 스타일 (로그아웃 텍스트 링크) */
+    [data-testid="stSidebar"] .sidebar-id {{ 
         font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; 
-        font-weight: bold !important; 
-        color: #2ecc71 !important; 
-        display: inline-block !important;
-        margin-right: 8px !important;
+        font-weight: bold !important; color: #2ecc71 !important; 
+        display: inline-block !important; margin-right: 10px !important;
     }}
     
-    /* 사이드바 전용 버튼 스타일 (메인 버튼과 중복 차단) */
-    section[data-testid="stSidebar"] .stButton > button {{
+    /* 사이드바 내 버튼을 링크처럼 투명화 (메인 버튼과 충돌 차단) */
+    [data-testid="stSidebar"] .stButton > button {{
         background: none !important; border: none !important; padding: 0 !important;
         color: #888 !important; text-decoration: underline !important;
         cursor: pointer !important; height: auto !important; width: auto !important;
         display: inline-block !important; vertical-align: middle !important;
         box-shadow: none !important; position: static !important;
     }}
-    section[data-testid="stSidebar"] .stButton > button p {{ 
-        font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; 
-        margin: 0 !important; 
+    [data-testid="stSidebar"] .stButton > button p {{ 
+        font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; font-weight: normal !important; margin: 0 !important; 
     }}
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
 
-    /* ✅ 2. 메인 디자인 (상단 헤더 및 표 구조 복원) */
+    /* ✅ 2. 메인 화면 영역 전용 스타일 (40px 헤더 및 표 구조 복원) */
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
+    .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
+    
+    /* 표 헤더(키워드, URL 등) 40px 절대 고정 */
     [data-testid="stVerticalBlock"] .stCaption div p {{ 
         font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
         color: #ddd !important; font-weight: 900 !important;
     }}
 
-    /* ✅ 3. 🔥 메인 화면 하단 거대 작업넣기 버튼 (사이드바 버튼과 완전 분리) */
-    /* section[data-testid="stSidebar"]에 속하지 않은 메인 버튼만 선택 */
+    /* ✅ 3. 🔥 메인 화면 하단 거대 작업넣기 버튼 (사이드바 버튼과 충돌 방지) */
+    /* .main 클래스 하위의 버튼만 타겟팅하여 하단 고정 적용 */
     .main div.stButton > button[kind="primary"], .main div.stButton > button[kind="secondary"] {{
         position: fixed !important; 
         bottom: 30px !important; 
@@ -79,7 +80,7 @@ st.markdown(f"""
         transform: translateX(-50%) !important;
         width: 85% !important; 
         max-width: 800px !important; 
-        height: 110px !important; /* 거대한 높이 복구 */
+        height: 110px !important; /* 원래의 거대한 높이 복구 */
         background-color: #FF4B4B !important; 
         color: white !important;
         border-radius: 20px !important; 
@@ -137,9 +138,9 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 (로그아웃 버튼: 작은 텍스트 링크) ---
+    # --- 1. 사이드바 (로그아웃 버튼: 작은 텍스트 링크로 충돌 방지) ---
     with st.sidebar:
-        # 닉네임 옆에 로그아웃을 나란히 배치
+        # 닉네임 옆에 로그아웃을 한 줄에 배치
         col_id, col_log = st.columns([2.5, 1])
         with col_id:
             st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
@@ -174,7 +175,7 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # --- 3. 작업 일괄 등록 (표 구조 완벽 복구) ---
+            # --- 3. 작업 일괄 등록 (표 구조 및 폰트 크기 완벽 복구) ---
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
@@ -190,7 +191,7 @@ else:
                 s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 [복구] 거대한 메인 하단 고정 버튼 (사이드바 버튼과 절대 안 겹침)
+            # 🔥 [복구] 거대한 메인 하단 고정 버튼 (사이드바 버튼과 절대 충돌하지 않음)
             if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
