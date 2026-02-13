@@ -26,7 +26,7 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# ✅ [해결책] 세션 상태가 꼬이지 않도록 위젯 폼용 ID를 생성합니다.
+# ✅ [세션 초기화] 위젯 충돌 방지용 ID
 if "form_id" not in st.session_state:
     st.session_state.form_id = 0
 
@@ -40,6 +40,8 @@ st.markdown(f"""
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     [data-testid="stVerticalBlock"] .stCaption div p {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #ddd !important; font-weight: 900 !important; }}
+    
+    /* 하단 고정 작업넣기 버튼 (50px 높이) */
     div.stButton > button {{
         position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
         width: 85% !important; max-width: 600px !important; height: 50px !important;
@@ -47,17 +49,20 @@ st.markdown(f"""
         z-index: 999999 !important; border: 2px solid white !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }}
     div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; line-height: 1 !important; }}
+    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     small, .stDeployButton {{ display: none !important; }}
     </style>
     """, unsafe_allow_html=True)
 
+# ✅ 텔레그램 발송 함수
 def send_telegram_msg(message):
     try:
         token = "8568445865:AAHkHpC164IDFKTyy-G76QdCZlWnpFdr6ZU"
         chat_id = "496784884"
-        requests.post(f"https://api.telegram.org/bot{token}/sendMessage", data={"chat_id": chat_id, "text": message})
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        requests.post(url, data={"chat_id": chat_id, "text": message})
     except: pass
 
 def get_gspread_client():
@@ -69,16 +74,16 @@ if st.query_params.get("action") == "logout":
     st.session_state.logged_in = False; st.query_params.clear(); st.rerun()
 
 if not st.session_state.logged_in:
-    # (로그인 폼 영역 - 생략)
+    # (로그인 폼 영역 - 이전과 동일)
     pass
 else:
-    # --- 1. 사이드바 (디자인 절대 보존) ---
+    # --- 1. 사이드바 (디자인 고정) ---
     with st.sidebar:
         st.markdown(f'<div style="display: flex; align-items: center;"><span class="sidebar-id">✅ {st.session_state.nickname}님</span><a href="/?action=logout" target="_self" class="logout-link">LOGOUT</a></div>', unsafe_allow_html=True)
         st.divider()
         for item in ANNOUNCEMENTS: st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 2. 메인 헤더 & 수량 지표 (이미지 완벽 복구) ---
+    # --- 2. 메인 헤더 & 수량 지표 (4칸 복구 완료) ---
     h_col1, h_col2 = st.columns([4, 1.2])
     with h_col1: st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
     with h_col2: st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 15px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
@@ -105,7 +110,6 @@ else:
             rows_inputs = []
             for i in range(10):
                 r_col = st.columns([2, 3, 1.2, 1.2, 1.2])
-                # ✅ [해결] form_id를 사용하여 위젯을 새로 생성함으로써 충돌 없이 비워지도록 함
                 kw = r_col[0].text_input(f"k_{i}", key=f"k_{i}_{st.session_state.form_id}", label_visibility="collapsed")
                 u_raw = r_col[1].text_input(f"u_{i}", key=f"u_{i}_{st.session_state.form_id}", label_visibility="collapsed", placeholder="(링크 입력)")
                 l = r_col[2].number_input(f"l_{i}", key=f"l_{i}_{st.session_state.form_id}", min_value=0, step=1, label_visibility="collapsed")
@@ -113,12 +117,32 @@ else:
                 s = r_col[4].number_input(f"s_{i}", key=f"s_{i}_{st.session_state.form_id}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
+            # 🔥 [복구 완료] 작업넣기 버튼 클릭 시 알림 발송 및 데이터 저장
             if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
-                    # (중략: 데이터 저장 및 텔레그램 발송 로직)
-                    
-                    # ✅ [해결] 등록 성공 후 form_id만 증가시켜 입력창을 즉시 빈 상태로 초기화
-                    st.session_state.form_id += 1
-                    st.success("🎊 모든 등록 완료!"); time.sleep(1.2); st.rerun()
+                    try:
+                        total_l, total_r, total_s = sum(d['l'] for d in valid_rows), sum(d['r'] for d in valid_rows), sum(d['s'] for d in valid_rows)
+                        rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
+                        
+                        if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                            # 1. 수량 차감
+                            acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
+                            acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
+                            acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
+
+                            # 2. 데이터 기록 및 텔레그램 메시지 생성
+                            url_list_str = "\n".join([f"- {d['url']}" for d in valid_rows])
+                            for d in valid_rows:
+                                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
+                            
+                            # ✅ [해결] 누락되었던 텔레그램 발송 코드 복구
+                            send_telegram_msg(f"🔔 [신규작업 알림]\n{st.session_state.nickname}\n\n{url_list_str}\n\n공{total_l} / 댓{total_r} / 스{total_s}")
+                            
+                            # 3. 입력창 초기화 및 새로고침
+                            st.session_state.form_id += 1
+                            st.success("🎊 모든 등록 및 텔레그램 발송 완료!"); time.sleep(1.2); st.rerun()
+                        else: st.error("❌ 잔여 수량 부족!")
+                    except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
