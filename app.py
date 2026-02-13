@@ -16,7 +16,7 @@ FONT_CONFIG = {
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
-    "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
+    "METRIC_LABEL": "20px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "40px",    # 입력창 상단 라벨 크기
