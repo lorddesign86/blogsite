@@ -210,16 +210,16 @@ else:
                                 
                                 # ✅ [요청 반영] 텔레그램 메시지 상세화
                                 msg = (
-                                    f"🔔 [신규 작업 알림]\n\n"
-                                    f"👤 사용자 : {st.session_state.nickname}\n"
-                                    f"🔗 링크 :\n{url_list_str}\n"
-                                    f"📊 수량 : 공{total_l} / 댓{total_r} / 스{total_s}"
+                                    f"🔔 [크몽 신규작업 알림]\n"
+                                    f"닉네임 : {st.session_state.nickname}\n"
+                                    f"링크 :\n{url_list_str}\n"
+                                    f"수량 : 공{total_l} / 댓{total_r} / 스{total_s}"
                                 )
                                 send_telegram_msg(msg)
                                 
-                                st.success("🎊 모든 등록 완료!")
+                                st.success("🎊 작업 등록 완료!")
                                 time.sleep(1)
                                 st.rerun()
-                            else: st.error("❌ 잔여 수량 부족")
+                            else: st.error("❌ 잔여 수량 부족, 충전 후 이용해주세요.")
                         except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
