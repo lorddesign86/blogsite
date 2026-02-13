@@ -11,7 +11,7 @@ import requests
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
-    "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
+    "SIDEBAR_LINKS": "20px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
     "LOGOUT_BTN": "22px",      # 로그아웃 버튼 크기 (가시성 상향)
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
