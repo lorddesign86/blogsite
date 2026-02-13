@@ -12,10 +12,10 @@ import requests
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
     "SIDEBAR_LINKS": "25px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
-    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 글자 크기
+    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
-    "CHARGE_BTN": "20px",      # 충전하기 버튼 글자 크기
-    "REMAIN_TITLE": "50px",    # '실시간 잔여 수량' 제목 크기
+    "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
+    "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
     "METRIC_LABEL": "16px",    # 수량 항목 이름 크기
     "METRIC_VALUE": "35px",    # 잔여 수량 숫자 크기
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
@@ -35,60 +35,56 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (모바일 하단 강제 고정 로직 대폭 강화) ---
+# --- 🎨 디자인 & 정렬 CSS (모바일 바닥 접착 로직 극대화) ---
 st.markdown(f"""
     <style>
-    /* 1. 하단 버튼이 콘텐츠를 가리지 않도록 전체 여백 대폭 확보 */
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
+    /* 1. 콘텐츠 영역 하단 여백 대폭 확보 (버튼에 가려지지 않게) */
+    .main .block-container {{ 
+        padding-top: 2.5rem !important; 
+        padding-bottom: 250px !important; 
+    }}
     
-    /* 2. 🚀 [최종 보강] 작업넣기 버튼 하단 강제 고정 (Fixed) */
-    /* 모바일 브라우저 환경에서 씹히지 않도록 !important와 높은 z-index 부여 */
-    [data-testid="stForm"] div.stButton > button:first-child[kind="primary"] {{
-        position: fixed !important; 
-        bottom: 25px !important;    /* 바닥에서의 높이 */
-        left: 50% !important; 
+    /* 2. 🚀 [최종 해결책] 버튼 하단 강제 접착 및 레이어 고정 */
+    /* .stButton 경로를 더 구체적으로 지정하여 브라우저 엔진이 우선적으로 처리하게 함 */
+    section[data-testid="stSidebar"] + section .stButton > button {{
+        position: fixed !important;
+        bottom: 20px !important;    /* 바닥에서 20px 띄움 */
+        left: 50% !important;
         transform: translateX(-50%) !important;
-        width: 90% !important;      /* 모바일 화면 너비 대응 */
-        max-width: 800px !important; 
-        height: 110px !important;
-        background-color: #FF4B4B !important; 
+        width: 90% !important;      /* 화면 너비 90% 차지 */
+        max-width: 800px !important;
+        height: 120px !important;    /* 버튼 높이 확보 */
+        background-color: #FF4B4B !important;
+        color: white !important;
         border-radius: 20px !important;
-        box-shadow: 0 10px 50px rgba(0,0,0,0.8) !important; 
-        z-index: 999999 !important; /* 최상단 레이어 고정 */
-        border: 3px solid white !important;
-        visibility: visible !important;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.5) !important; /* 상단으로 그림자 효과 */
+        z-index: 1000000 !important; /* 모든 요소의 위에 군림 */
+        border: 4px solid white !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
-    
-    /* 버튼 내부 텍스트 스타일 */
-    [data-testid="stForm"] div.stButton > button:first-child[kind="primary"] p {{
-        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; 
+
+    /* 버튼 내부 텍스트 굵기 및 크기 강제 적용 */
+    section[data-testid="stSidebar"] + section .stButton > button p {{
+        font-size: {FONT_CONFIG['SUBMIT_BTN']} !important;
         font-weight: 900 !important;
-        letter-spacing: 2px !important;
-        line-height: 1 !important;
+        color: white !important;
+        margin: 0 !important;
     }}
 
-    /* "Press Enter..." 등 불필요한 안내 문구 숨기기 */
-    [data-testid="stFormSubmitButton"] + div {{ display: none !important; }}
-    small {{ display: none !important; }}
+    /* 불필요한 Streamlit 기본 안내 문구 완전 제거 */
+    [data-testid="stFormSubmitButton"] + div, small, .stDeployButton {{ 
+        display: none !important; 
+    }}
 
-    /* 사이드바 및 헤더 스타일 (사용자 최종 설정 유지) */
-    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; margin-bottom: 10px; color: #2ecc71; }}
+    /* 사이드바 및 헤더 (사용자 최종 설정값 그대로 적용) */
+    .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold; color: #2ecc71; }}
     [data-testid="stSidebar"] {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
-    [data-testid="stSidebar"] button p {{ font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; font-weight: bold !important; }}
-    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; margin: 0; }}
-    .charge-link {{
-        display: inline-block; padding: 6px 14px; background-color: #FF4B4B;
-        color: white !important; text-decoration: none; border-radius: 8px;
-        font-weight: bold; font-size: {FONT_CONFIG['CHARGE_BTN']} !important;
-    }}
-    [data-testid="stMetric"] {{
-        background-color: #1e2129; border-radius: 10px; border: 1px solid #444; 
-        padding: 15px 10px !important; min-height: 110px;
-    }}
+    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold; }}
     [data-testid="stMetricLabel"] div {{ font-size: {FONT_CONFIG['METRIC_LABEL']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
-    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
-    .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; }}
+    .stCaption {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #aaa !important; font-weight: bold !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -109,11 +105,11 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# --- 1. 로그인 화면 (아이디 자동 완성 지원) ---
+# --- 1. 로그인 화면 ---
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
-        with st.form("login_form", clear_on_submit=False):
+        with st.form("login_form"):
             st.markdown("### 🛡️ 로그인")
             u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
             u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
@@ -141,11 +137,10 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    charge_url = "https://kmong.com/inboxes?inbox_group_id=&partner_id="
     st.markdown(f"""
         <div class="header-wrapper">
             <span class="main-title">🚀 {st.session_state.nickname}님의 작업등록</span>
-            <a href="{charge_url}" target="_blank" class="charge-link">💰 충전요청하기</a>
+            <a href="https://kmong.com/inboxes" target="_blank" class="charge-link" style="font-size:{FONT_CONFIG['CHARGE_BTN']};">💰 충전요청하기</a>
         </div>
     """, unsafe_allow_html=True)
     
@@ -157,7 +152,7 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_values[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f"📊 실시간 잔여 수량")
+            st.markdown(f'<div style="font-size:{FONT_CONFIG["REMAIN_TITLE"]}; font-weight:bold;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}")
             m_cols[1].metric("댓글", f"{user_data[3]}")
@@ -179,7 +174,7 @@ else:
                     s = r_col[4].number_input(f"s_{i}", min_value=0, step=1, label_visibility="collapsed")
                     rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-                # 🔥 작업넣기 버튼 (상단 CSS에서 fixed 강제 고정)
+                # 🔥 하단 고정 거대 버튼 (CSS에서 강력 제어)
                 submitted = st.form_submit_button("🔥 작업넣기", type="primary")
 
                 if submitted:
@@ -190,12 +185,10 @@ else:
                             rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
 
                             if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                                # 1. 수량 차감
                                 acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                                 acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                                 acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                                # 2. 외부 시트 기록
                                 target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                                 target_ws = target_sh.worksheet("작업")
                                 url_col = target_ws.col_values(5)
@@ -208,18 +201,13 @@ else:
                                     hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                                     target_ws.insert_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname], index=last_idx + i, value_input_option='USER_ENTERED')
                                 
-                                # 3. 텔레그램 알림 상세화
-                                msg = (
-                                    f"🔔 [크몽 신규작업 알림]\n"
-                                    f"{st.session_state.nickname}\n"
-                                    f"\n{url_list_str}\n"
-                                    f"공{total_l} / 댓{total_r} / 스{total_s}"
-                                )
+                                # 텔레그램 알림 상세화
+                                msg = f"🔔 [크몽 신규작업 알림]\n{st.session_state.nickname}\n\n{url_list_str}\n\n공{total_l} / 댓{total_r} / 스{total_s}"
                                 send_telegram_msg(msg)
                                 
                                 st.success("🎊 작업 등록 완료!")
                                 time.sleep(1)
                                 st.rerun()
-                            else: st.error("❌ 잔여 수량 부족, 충전 후 이용해주세요.")
+                            else: st.error("❌ 잔여 수량 부족!")
                         except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
