@@ -12,7 +12,7 @@ import requests
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      # 사이드바 사용자 ID 크기 [cite: 2025-08-09]
     "SIDEBAR_LINKS": "20px",   # 사이드바 서비스 링크 글자 크기 [cite: 2025-08-09]
-    "LOGOUT_BTN": "22px",      # 로그아웃 버튼 크기 (가시성 상향)
+    "LOGOUT_BTN": "20px",      # 로그아웃 버튼 크기
     "MAIN_TITLE": "32px",      # 메인 제목 크기
     "CHARGE_BTN": "20px",      # 충전하기 버튼 크기
     "REMAIN_TITLE": "30px",    # '실시간 잔여 수량' 제목 크기
@@ -21,7 +21,7 @@ FONT_CONFIG = {
     "REGISTER_TITLE": "22px",  # '작업 일괄 등록' 제목 크기
     "TABLE_HEADER": "20px",    # 입력창 상단 라벨 크기 (키워드, URL 등)
     "TABLE_INPUT": "16px",     # 입력창 내부 글자 크기
-    "SUBMIT_BTN": "35px"       # 🔥 작업넣기 버튼 글자 크기
+    "SUBMIT_BTN": "35px"       # 🔥 작업넣기 버튼 글자 크기 (슬림화)
 }
 
 ANNOUNCEMENTS = [
@@ -35,12 +35,12 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# --- 🎨 디자인 & 정렬 CSS (로그아웃 버튼 가시성 및 표 구조 복구) ---
+# --- 🎨 디자인 & 정렬 CSS (로그아웃 버튼 강제 노출 및 표 구조 복원) ---
 st.markdown(f"""
     <style>
     .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 180px !important; }}
     
-    /* ✅ 1. 사이드바 및 로그아웃 버튼 절대 노출 설정 */
+    /* ✅ 1. 사이드바 LOGOUT 버튼 강제 가시화 (절대 고정) */
     .sidebar-id {{ 
         font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; 
         font-weight: bold !important; 
@@ -49,36 +49,35 @@ st.markdown(f"""
         display: block !important;
     }}
     
-    /* 사이드바 LOGOUT 버튼 스타일 (테두리와 배경색으로 가시성 극대화) */
+    /* 사이드바 내 모든 버튼(특히 LOGOUT) 스타일 강제 적용 */
     [data-testid="stSidebar"] .stButton > button {{
         width: 100% !important;
-        height: 50px !important;
-        background-color: #FF4B4B !important; /* 가시성을 위해 빨간색 적용 가능 */
+        height: 45px !important;
+        background-color: #444 !important; /* 배경색을 명시적으로 회색으로 설정 */
         color: white !important;
-        border: 2px solid white !important;
-        border-radius: 10px !important;
+        border: 2px solid #ff4b4b !important; /* 테두리로 위치 확인 */
+        border-radius: 8px !important;
         display: block !important;
         visibility: visible !important;
+        opacity: 1 !important;
         z-index: 99999 !important;
     }}
     [data-testid="stSidebar"] .stButton > button p {{ 
         font-size: {FONT_CONFIG['LOGOUT_BTN']} !important; 
-        font-weight: 900 !important;
+        font-weight: bold !important;
         color: white !important;
     }}
     
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ 
         font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; 
-        line-height: 2.0 !important;
     }}
 
-    /* ✅ 2. 메인 텍스트 크기 강제 고정 */
+    /* ✅ 2. 메인 텍스트 크기 강제 적용 (TABLE_HEADER 40px 등) */
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     
     /* 표 헤더(키워드, URL 등) 40px 절대 고정 로직 보강 */
-    [data-testid="stVerticalBlock"] .stCaption div p, 
-    [data-testid="stVerticalBlock"] div[data-testid="stCaptionContainer"] p {{ 
+    [data-testid="stVerticalBlock"] .stCaption div p {{ 
         font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
         color: #ddd !important; 
         font-weight: bold !important;
@@ -90,13 +89,13 @@ st.markdown(f"""
         font-weight: 800 !important; color: #00ff00 !important; 
     }}
 
-    /* ✅ 3. 하단 고정 작업넣기 버튼 (최적화된 사이즈) */
+    /* ✅ 3. 하단 고정 작업넣기 버튼 (슬림화 버전) */
     div.stButton > button[kind="secondary"], div.stButton > button[kind="primary"] {{
         position: fixed !important; bottom: 25px !important; left: 50% !important;
         transform: translateX(-50%) !important;
-        width: 70% !important; max-width: 450px !important; height: 75px !important;
+        width: 70% !important; max-width: 450px !important; height: 70px !important;
         background-color: #FF4B4B !important; color: white !important;
-        border-radius: 15px !important; box-shadow: 0 -10px 40px rgba(0,0,0,0.7) !important;
+        border-radius: 15px !important; box-shadow: 0 -10px 30px rgba(0,0,0,0.6) !important;
         z-index: 1000000 !important; border: 2px solid white !important;
     }}
     div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 800 !important; }}
@@ -143,10 +142,10 @@ if not st.session_state.logged_in:
                     st.error("정보 불일치")
                 except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 (로그아웃 버튼 위치 사수) ---
+    # --- 1. 사이드바 (LOGOUT 버튼 위치 강제 사수) ---
     with st.sidebar:
         st.markdown(f'<div class="sidebar-id">✅ {st.session_state.nickname}님</div>', unsafe_allow_html=True)
-        # 로그아웃 버튼을 사이드바 최상단 닉네임 바로 아래 배치
+        # 로그아웃 버튼 생성 (사이드바 CSS 적용 대상)
         if st.button("LOGOUT"):
             st.session_state.logged_in = False
             st.rerun()
@@ -154,11 +153,11 @@ else:
         for item in ANNOUNCEMENTS:
             st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 2. 메인 헤더 ---
-    header_col1, header_col2 = st.columns([4, 1.2])
-    with header_col1:
+    # --- 2. 메인 헤더 (충전 버튼 복구) ---
+    h_col1, h_col2 = st.columns([4, 1.2])
+    with h_col1:
         st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
-    with header_col2:
+    with h_col2:
         st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 15px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청</a>', unsafe_allow_html=True)
     
     try:
@@ -177,11 +176,11 @@ else:
             m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # --- 3. 작업 일괄 등록 (image_85d1fa.png 스타일 정갈한 표 구조) ---
+            # --- 3. 작업 일괄 등록 (image_85d1fa.png 스타일 정갈한 표 구조 복원) ---
             rows_inputs = []
             st.markdown(f'<div style="font-size:{FONT_CONFIG["REGISTER_TITLE"]}; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             
-            # 표 헤더 라벨 (40px 강제 적용 영역)
+            # 표 헤더 라벨 (40px)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
             labels = ["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]
             for idx, label in enumerate(labels):
