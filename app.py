@@ -138,7 +138,7 @@ else:
                                 hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
                             
                             # ✅ [해결] 누락되었던 텔레그램 발송 코드 복구
-                            send_telegram_msg(f"🔔 [신규작업 알림]\n{st.session_state.nickname}\n\n{url_list_str}\n\n공{total_l} / 댓{total_r} / 스{total_s}")
+                            send_telegram_msg(f"🔔 [크몽 신규작업 알림]\n{st.session_state.nickname}\n\n{url_list_str}\n\n공{total_l} / 댓{total_r} / 스{total_s}")
                             
                             # 3. 입력창 초기화 및 새로고침
                             st.session_state.form_id += 1
