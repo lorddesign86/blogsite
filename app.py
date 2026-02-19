@@ -12,7 +12,8 @@ FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      "SIDEBAR_LINKS": "20px",   "LOGOUT_TEXT": "15px",
     "MAIN_TITLE": "32px",      "CHARGE_BTN": "20px",      "REMAIN_TITLE": "30px",
     "METRIC_LABEL": "16px",    "METRIC_VALUE": "35px",    "REGISTER_TITLE": "22px",
-    "TABLE_HEADER": "40px",    "TABLE_INPUT": "16px",     "SUBMIT_BTN": "22px"
+    "TABLE_HEADER": "40px",    # 🔥 헤더 40px 절대 사수
+    "TABLE_INPUT": "16px",     "SUBMIT_BTN": "22px"       # 🔥 하단 버튼 폰트
 }
 
 ANNOUNCEMENTS = [
@@ -26,19 +27,30 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
+# 위젯 초기화용 ID
 if "form_id" not in st.session_state: st.session_state.form_id = 0
 
-# --- 🎨 디자인 & 정렬 CSS (완벽 복구) ---
+# --- 🎨 디자인 & 정렬 CSS (이미지 기반 완벽 복구) ---
 st.markdown(f"""
     <style>
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 120px !important; }}
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
+    
+    /* 사이드바 및 로그아웃 링크 */
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; display: inline-block !important; }}
     .logout-link {{ font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; color: #888 !important; text-decoration: underline !important; margin-left: 10px !important; cursor: pointer !important; }}
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
+
+    /* 메인 상단 디자인 */
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
-    [data-testid="stVerticalBlock"] .stCaption div p {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #ddd !important; font-weight: 900 !important; }}
     
+    /* 표 헤더 40px 강제 고정 */
+    [data-testid="stVerticalBlock"] .stCaption div p {{ 
+        font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
+        color: #ddd !important; font-weight: 900 !important; 
+    }}
+
+    /* 하단 고정 작업넣기 버튼 (50px 높이) */
     div.stButton > button {{
         position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
         width: 85% !important; max-width: 600px !important; height: 50px !important;
@@ -46,6 +58,7 @@ st.markdown(f"""
         z-index: 999999 !important; border: 2px solid white !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }}
     div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; }}
+    
     input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     small, .stDeployButton {{ display: none !important; }}
@@ -64,17 +77,19 @@ def get_gspread_client():
     return gspread.authorize(Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes))
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+
+# 하이퍼링크 로그아웃 처리
 if st.query_params.get("action") == "logout":
     st.session_state.logged_in = False; st.query_params.clear(); st.rerun()
 
-# ✅ [수정] 자동 완성을 위해 st.form을 제거하고 일반 위젯으로 구성
+# ✅ [복구] 자동 로그인 인식을 위한 일반 입력창 구조
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
         st.markdown("### 🛡️ 로그인")
-        u_id = st.text_input("ID", placeholder="아이디", key="login_user")
-        u_pw = st.text_input("PW", type="password", placeholder="비밀번호", key="login_pass")
-        if st.button("LOGIN", key="login_btn"):
+        u_id = st.text_input("ID", placeholder="아이디", key="input_id")
+        u_pw = st.text_input("PW", type="password", placeholder="비밀번호", key="input_pw")
+        if st.button("LOGIN", key="btn_login"):
             try:
                 client = get_gspread_client()
                 sh = client.open("작업_관리_데이터베이스")
@@ -88,13 +103,13 @@ if not st.session_state.logged_in:
                 st.error("정보 불일치")
             except Exception as e: st.error(f"실패: {str(e)}")
 else:
-    # --- 1. 사이드바 ---
+    # --- 1. 사이드바 (디자인 사수) ---
     with st.sidebar:
         st.markdown(f'<div style="display: flex; align-items: center;"><span class="sidebar-id">✅ {st.session_state.nickname}님</span><a href="/?action=logout" target="_self" class="logout-link">LOGOUT</a></div>', unsafe_allow_html=True)
         st.divider()
         for item in ANNOUNCEMENTS: st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 2. 메인 헤더 & 수량 지표 (4칸 복구) ---
+    # --- 2. 메인 헤더 & 수량 지표 (4칸 완벽 복구) ---
     h_col1, h_col2 = st.columns([4, 1.2])
     with h_col1: st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
     with h_col2: st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 15px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
@@ -108,7 +123,7 @@ else:
 
         if user_row_idx != -1:
             st.markdown(f'<div class="remain-title">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
-            m_cols = st.columns(4)
+            m_cols = st.columns(4) # 공감, 댓글, 스크랩, 접속ID
             m_cols[0].metric("공감", f"{user_data[2]}"); m_cols[1].metric("댓글", f"{user_data[3]}")
             m_cols[2].metric("스크랩", f"{user_data[4]}"); m_cols[3].metric("접속ID", user_data[0])
             st.divider()
@@ -128,7 +143,7 @@ else:
                 s = r_col[4].number_input(f"s_{i}", key=f"s_{i}_{st.session_state.form_id}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 [통합] 작업넣기 클릭 시 모든 기능 작동
+            # 🔥 [기능 통합] 수량차감 + 2번째시트복사 + 텔레그램알림
             if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
@@ -152,11 +167,11 @@ else:
                                 target_ws.append_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname])
                                 urls_for_msg.append(f"- {d['url']}")
 
-                            # 3. 텔레그램 메시지 발송
+                            # 3. 텔레그램 알림
                             msg = f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}"
                             send_telegram_msg(msg)
                             
-                            st.session_state.form_id += 1 # 입력창 비우기
+                            st.session_state.form_id += 1 # 입력창 초기화
                             st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
                         else: st.error("❌ 잔여 수량 부족!")
                     except Exception as ex: st.error(f"오류: {ex}")
