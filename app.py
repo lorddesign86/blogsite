@@ -12,8 +12,7 @@ FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      "SIDEBAR_LINKS": "20px",   "LOGOUT_TEXT": "15px",
     "MAIN_TITLE": "32px",      "CHARGE_BTN": "20px",      "REMAIN_TITLE": "30px",
     "METRIC_LABEL": "16px",    "METRIC_VALUE": "35px",    "REGISTER_TITLE": "22px",
-    "TABLE_HEADER": "40px",    # 🔥 헤더 40px 절대 사수
-    "TABLE_INPUT": "16px",     "SUBMIT_BTN": "22px"       # 🔥 하단 버튼 폰트
+    "TABLE_HEADER": "40px",    "TABLE_INPUT": "16px",     "SUBMIT_BTN": "22px"
 }
 
 ANNOUNCEMENTS = [
@@ -40,26 +39,33 @@ st.markdown(f"""
     .logout-link {{ font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; color: #888 !important; text-decoration: underline !important; margin-left: 10px !important; cursor: pointer !important; }}
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
 
-    /* 메인 상단 디자인 */
-    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
-    .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
+    /* 로그인 화면 디자인 (image_124e40.png 기반) */
+    .login-container {{ 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; 
+    }}
+    .login-box {{ width: 100%; max-width: 400px; padding: 20px; }}
     
-    /* 표 헤더 40px 강제 고정 */
-    [data-testid="stVerticalBlock"] .stCaption div p {{ 
-        font-size: {FONT_CONFIG['TABLE_HEADER']} !important; 
-        color: #ddd !important; font-weight: 900 !important; 
+    /* 로그인 버튼 하단 고정 (image_124e40.png) */
+    .stButton > button[kind="primaryFormSubmit"] {{
+        position: fixed !important; bottom: 30px !important; left: 50% !important; transform: translateX(-50%) !important;
+        width: 80% !important; max-width: 450px !important; height: 55px !important;
+        background-color: #FF4B4B !important; color: white !important; font-size: 20px !important; font-weight: bold !important;
+        border-radius: 12px !important; border: none !important; z-index: 1000 !important;
     }}
 
-    /* 하단 고정 작업넣기 버튼 (50px 높이) */
-    div.stButton > button {{
+    /* 메인 상단 디자인 */
+    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
+    [data-testid="stVerticalBlock"] .stCaption div p {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #ddd !important; font-weight: 900 !important; }}
+
+    /* 메인 작업넣기 버튼 (50px 높이 하단 고정) */
+    .main div.stButton > button {{
         position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
         width: 85% !important; max-width: 600px !important; height: 50px !important;
         background-color: #FF4B4B !important; color: white !important; border-radius: 12px !important;
         z-index: 999999 !important; border: 2px solid white !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }}
-    div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; }}
+    .main div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; }}
     
-    input {{ font-size: {FONT_CONFIG['TABLE_INPUT']} !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     small, .stDeployButton {{ display: none !important; }}
     </style>
@@ -78,32 +84,36 @@ def get_gspread_client():
 
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 
-# 하이퍼링크 로그아웃 처리
 if st.query_params.get("action") == "logout":
     st.session_state.logged_in = False; st.query_params.clear(); st.rerun()
 
-# ✅ [복구] 자동 로그인 인식을 위한 일반 입력창 구조
+# ✅ [해결] 아이디 저장을 위해 브라우저가 인식 가능한 표준 로그인 폼 구조 (image_124e40.png)
 if not st.session_state.logged_in:
-    _, center_col, _ = st.columns([1, 1.3, 1])
-    with center_col:
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
         st.markdown("### 🛡️ 로그인")
-        u_id = st.text_input("ID", placeholder="아이디", key="input_id")
-        u_pw = st.text_input("PW", type="password", placeholder="비밀번호", key="input_pw")
-        if st.button("LOGIN", key="btn_login"):
-            try:
-                client = get_gspread_client()
-                sh = client.open("작업_관리_데이터베이스")
-                acc_sheet = sh.worksheet("Accounts")
-                all_vals = acc_sheet.get_all_values()
-                for row in all_vals[1:]:
-                    if str(row[0]) == u_id and str(row[1]) == u_pw:
-                        st.session_state.logged_in, st.session_state.current_user = True, u_id
-                        st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
-                        st.rerun()
-                st.error("정보 불일치")
-            except Exception as e: st.error(f"실패: {str(e)}")
+        with st.form("login_form", clear_on_submit=False):
+            u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
+            # 폼 내부의 LOGIN 버튼은 하단 고정 CSS 적용 (image_124e40.png)
+            if st.form_submit_button("LOGIN"):
+                try:
+                    client = get_gspread_client()
+                    sh = client.open("작업_관리_데이터베이스")
+                    acc_sheet = sh.worksheet("Accounts")
+                    all_vals = acc_sheet.get_all_values()
+                    for row in all_vals[1:]:
+                        if str(row[0]) == u_id and str(row[1]) == u_pw:
+                            st.session_state.logged_in, st.session_state.current_user = True, u_id
+                            st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
+                            st.rerun()
+                    st.error("정보 불일치")
+                except Exception as e: st.error(f"실패: {str(e)}")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 else:
-    # --- 1. 사이드바 (디자인 사수) ---
+    # --- 1. 사이드바 ---
     with st.sidebar:
         st.markdown(f'<div style="display: flex; align-items: center;"><span class="sidebar-id">✅ {st.session_state.nickname}님</span><a href="/?action=logout" target="_self" class="logout-link">LOGOUT</a></div>', unsafe_allow_html=True)
         st.divider()
@@ -123,7 +133,7 @@ else:
 
         if user_row_idx != -1:
             st.markdown(f'<div class="remain-title">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
-            m_cols = st.columns(4) # 공감, 댓글, 스크랩, 접속ID
+            m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}"); m_cols[1].metric("댓글", f"{user_data[3]}")
             m_cols[2].metric("스크랩", f"{user_data[4]}"); m_cols[3].metric("접속ID", user_data[0])
             st.divider()
@@ -143,7 +153,6 @@ else:
                 s = r_col[4].number_input(f"s_{i}", key=f"s_{i}_{st.session_state.form_id}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 [기능 통합] 수량차감 + 2번째시트복사 + 텔레그램알림
             if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
@@ -152,12 +161,10 @@ else:
                         rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
                         
                         if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                            # 1. 수량 차감
                             acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                             acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                             acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                            # 2. History 및 2번째 시트("작업") 동시 기록
                             target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                             target_ws = target_sh.worksheet("작업")
                             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -167,11 +174,8 @@ else:
                                 target_ws.append_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname])
                                 urls_for_msg.append(f"- {d['url']}")
 
-                            # 3. 텔레그램 알림
-                            msg = f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}"
-                            send_telegram_msg(msg)
-                            
-                            st.session_state.form_id += 1 # 입력창 초기화
+                            send_telegram_msg(f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}")
+                            st.session_state.form_id += 1 
                             st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
                         else: st.error("❌ 잔여 수량 부족!")
                     except Exception as ex: st.error(f"오류: {ex}")
