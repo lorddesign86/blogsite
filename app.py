@@ -145,6 +145,6 @@ else:
                         send_telegram_msg(msg)
                         
                         st.session_state.form_id += 1 # 입력창 비우기
-                        st.success("🎊 수량 차감 및 텔레그램 발송 완료!"); time.sleep(1.2); st.rerun()
-                    else: st.error("❌ 잔여 수량이 부족합니다!")
+                        st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
+                    else: st.error("❌ 잔여 수량이 부족합니다!, 충전 후 이용해주세요")
     except Exception as e: st.error(f"오류: {e}")
