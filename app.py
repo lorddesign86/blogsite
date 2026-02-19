@@ -6,7 +6,7 @@ import time
 import requests
 
 # ==========================================
-# 📐 [FONT_CONFIG] - 사용자님 최종 설정 (수치 절대 고정)
+# 📐 [FONT_CONFIG] - 사용자님 설정 (절대 고정)
 # ==========================================
 FONT_CONFIG = {
     "SIDEBAR_ID": "25px",      "SIDEBAR_LINKS": "20px",   "LOGOUT_TEXT": "15px",
@@ -26,49 +26,25 @@ ANNOUNCEMENTS = [
 
 st.set_page_config(page_title="파우쓰", layout="wide")
 
-# 위젯 초기화 ID
 if "form_id" not in st.session_state: st.session_state.form_id = 0
 
-# --- 🎨 디자인 & 정렬 CSS (위치 사수 로직) ---
+# --- 🎨 디자인 & 정렬 CSS ---
 st.markdown(f"""
     <style>
-    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 150px !important; }}
-    
-    /* ✅ 1. 로그인창 위치 (화면 중앙 상단 고정) */
-    .login-wrapper {{
-        display: flex; justify-content: center; align-items: center;
-        min-height: 70vh;
-    }}
-    .login-box {{ width: 100%; max-width: 400px; }}
-
-    /* ✅ 2. 사이드바 디자인 사수 */
+    .main .block-container {{ padding-top: 2.5rem !important; padding-bottom: 120px !important; }}
     .sidebar-id {{ font-size: {FONT_CONFIG['SIDEBAR_ID']} !important; font-weight: bold !important; color: #2ecc71 !important; display: inline-block !important; }}
     .logout-link {{ font-size: {FONT_CONFIG['LOGOUT_TEXT']} !important; color: #888 !important; text-decoration: underline !important; margin-left: 10px !important; cursor: pointer !important; }}
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{ font-size: {FONT_CONFIG['SIDEBAR_LINKS']} !important; }}
-
-    /* ✅ 3. 메인 작업넣기 버튼 (50px 높이, 화면 하단 중앙 고정) */
-    /* 사이드바 버튼과 충돌을 막기 위해 .main 영역만 지정 */
-    .main div.stButton > button {{
-        position: fixed !important; 
-        bottom: 30px !important; 
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 85% !important; 
-        max-width: 600px !important; 
-        height: 50px !important;
-        background-color: #FF4B4B !important; 
-        color: white !important;
-        border-radius: 12px !important;
-        z-index: 999999 !important;
-        border: 2px solid white !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-    .main div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; }}
-
-    /* 기타 수치 고정 [cite: 2025-08-09] */
+    .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
+    .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     [data-testid="stVerticalBlock"] .stCaption div p {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #ddd !important; font-weight: 900 !important; }}
+    div.stButton > button {{
+        position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
+        width: 85% !important; max-width: 600px !important; height: 50px !important;
+        background-color: #FF4B4B !important; color: white !important; border-radius: 12px !important;
+        z-index: 999999 !important; border: 2px solid white !important; display: flex !important; align-items: center !important; justify-content: center !important;
+    }}
+    div.stButton > button p {{ font-size: {FONT_CONFIG['SUBMIT_BTN']} !important; font-weight: 900 !important; margin: 0 !important; }}
     [data-testid="stMetricValue"] div {{ font-size: {FONT_CONFIG['METRIC_VALUE']} !important; font-weight: 800 !important; color: #00ff00 !important; }}
     small, .stDeployButton {{ display: none !important; }}
     </style>
@@ -89,37 +65,33 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if st.query_params.get("action") == "logout":
     st.session_state.logged_in = False; st.query_params.clear(); st.rerun()
 
-# --- 로그인 화면 (위치 고정) ---
 if not st.session_state.logged_in:
-    st.markdown('<div class="login-wrapper"><div class="login-box">', unsafe_allow_html=True)
-    st.markdown("### 🛡️ 로그인")
-    u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
-    u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
-    if st.button("LOGIN"):
-        try:
-            client = get_gspread_client()
-            sh = client.open("작업_관리_데이터베이스")
-            acc_sheet = sh.worksheet("Accounts")
-            all_vals = acc_sheet.get_all_values()
-            for row in all_vals[1:]:
-                if str(row[0]) == u_id and str(row[1]) == u_pw:
-                    st.session_state.logged_in, st.session_state.current_user = True, u_id
-                    st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
-                    st.rerun()
-            st.error("정보 불일치")
-        except Exception as e: st.error(f"실패: {str(e)}")
-    st.markdown('</div></div>', unsafe_allow_html=True)
+    _, center_col, _ = st.columns([1, 1.3, 1])
+    with center_col:
+        with st.form("login_form"):
+            st.markdown("### 🛡️ 로그인")
+            u_id = st.text_input("ID", placeholder="아이디")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호")
+            if st.form_submit_button("LOGIN"):
+                client = get_gspread_client()
+                sh = client.open("작업_관리_데이터베이스")
+                acc_sheet = sh.worksheet("Accounts")
+                all_vals = acc_sheet.get_all_values()
+                for row in all_vals[1:]:
+                    if str(row[0]) == u_id and str(row[1]) == u_pw:
+                        st.session_state.logged_in, st.session_state.current_user = True, u_id
+                        st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
+                        st.rerun()
+                st.error("정보 불일치")
 else:
-    # --- 사이드바 ---
     with st.sidebar:
         st.markdown(f'<div style="display: flex; align-items: center;"><span class="sidebar-id">✅ {st.session_state.nickname}님</span><a href="/?action=logout" target="_self" class="logout-link">LOGOUT</a></div>', unsafe_allow_html=True)
         st.divider()
         for item in ANNOUNCEMENTS: st.markdown(f"**[{item['text']}]({item['url']})**")
 
-    # --- 메인 화면 지표 (4칸 복구) ---
     h_col1, h_col2 = st.columns([4, 1.2])
-    with h_col1: st.markdown(f'<div style="font-size:32px; font-weight:bold;">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
-    with h_col2: st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 15px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:20px; text-align:center; width:100%;">💰 충전요청</a>', unsafe_allow_html=True)
+    with h_col1: st.markdown(f'<div class="main-title">🚀 {st.session_state.nickname}님의 작업등록</div>', unsafe_allow_html=True)
+    with h_col2: st.markdown(f'<a href="https://kmong.com/inboxes" target="_blank" style="display:inline-block; background-color:#FF4B4B; color:white; padding:10px 15px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:{FONT_CONFIG["CHARGE_BTN"]}; text-align:center; width:100%;">💰 충전요청하기</a>', unsafe_allow_html=True)
     
     try:
         client = get_gspread_client()
@@ -129,14 +101,12 @@ else:
         user_row_idx, user_data = next(((i, r) for i, r in enumerate(all_vals[1:], 2) if r[0] == st.session_state.current_user), (-1, []))
 
         if user_row_idx != -1:
-            st.markdown(f'<div style="font-size:30px; font-weight:bold; margin-bottom:10px;">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="remain-title">📊 실시간 잔여 수량</div>', unsafe_allow_html=True)
             m_cols = st.columns(4)
             m_cols[0].metric("공감", f"{user_data[2]}"); m_cols[1].metric("댓글", f"{user_data[3]}")
             m_cols[2].metric("스크랩", f"{user_data[4]}"); m_cols[3].metric("접속ID", user_data[0])
             st.divider()
 
-            # 작업 등록 표
-            st.markdown(f'<div style="font-size:22px; font-weight:bold; margin-bottom:10px;">📝 작업 일괄 등록</div>', unsafe_allow_html=True)
             h_col = st.columns([2, 3, 1.2, 1.2, 1.2])
             for idx, label in enumerate(["키워드(선택)", "URL (필수)", "공감", "댓글", "스크랩"]): h_col[idx].caption(label)
 
@@ -150,36 +120,36 @@ else:
                 s = r_col[4].number_input(f"s_{i}", key=f"s_{i}_{st.session_state.form_id}", min_value=0, step=1, label_visibility="collapsed")
                 rows_inputs.append({"kw": kw, "url": u_raw.replace(" ", "").strip(), "l": l, "r": r, "s": s})
 
-            # 🔥 [요청 해결] 모든 디자인 위치 사수 + 시트 복사 로직 통합
             if st.button("🔥 작업넣기", type="primary"):
                 valid_rows = [d for d in rows_inputs if d['url'] and (d['l']>0 or d['r']>0 or d['s']>0)]
                 if valid_rows:
-                    try:
-                        total_l, total_r, total_s = sum(d['l'] for d in valid_rows), sum(d['r'] for d in valid_rows), sum(d['s'] for d in valid_rows)
-                        rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
-                        if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                            acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
-                            acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
-                            acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
+                    total_l, total_r, total_s = sum(d['l'] for d in valid_rows), sum(d['r'] for d in valid_rows), sum(d['s'] for d in valid_rows)
+                    rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
+                    
+                    if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
+                        # 1. 시트 수량 차감 실행 ㅡㅡ
+                        acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
+                        acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
+                        acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                            target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
-                            target_ws = target_sh.worksheet("작업")
-                            
-                            # ✅ 시트 비어있는 위치 찾아 순차 기록
-                            all_data = target_ws.get_all_values()
-                            start_row = next((i + 1 for i, row in enumerate(all_data) if i >= 3 and (len(row) < 5 or not row[4])), len(all_data) + 1)
-                            
-                            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                            urls_for_msg = []
-                            for idx, d in enumerate(valid_rows):
-                                hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
-                                # 시트 위치 정확히 타겟팅 기록
-                                target_ws.update(f"C{start_row+idx}:I{start_row+idx}", [[now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname]])
-                                urls_for_msg.append(f"- {d['url']}")
+                        # ✅ [해결] 2번째 시트("작업") 탭에 데이터 복사 로직 복구 ㅡㅡ
+                        target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
+                        target_ws = target_sh.worksheet("작업")
 
-                            send_telegram_msg(f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}")
-                            st.session_state.form_id += 1 
-                            st.success("🎊 모든 작업 및 위치 최적화 완료!"); time.sleep(1.2); st.rerun()
-                        else: st.error("❌ 잔여 수량 부족!")
-                    except Exception as ex: st.error(f"오류: {ex}")
-    except Exception as e: st.error(f"동기화 오류: {e}")
+                        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        urls_for_msg = []
+                        for d in valid_rows:
+                            # 1번째 시트 History 기록
+                            hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
+                            # 2번째 시트 "작업" 탭 복사 ㅡㅡ
+                            target_ws.append_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname])
+                            urls_for_msg.append(f"- {d['url']}")
+
+                        # 3. 텔레그램 발송 ㅡㅡ
+                        msg = f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}"
+                        send_telegram_msg(msg)
+                        
+                        st.session_state.form_id += 1 # 입력창 비우기
+                        st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
+                    else: st.error("❌ 잔여 수량이 부족합니다!")
+    except Exception as e: st.error(f"오류: {e}")
