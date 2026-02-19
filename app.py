@@ -38,6 +38,8 @@ st.markdown(f"""
     .main-title {{ font-size: {FONT_CONFIG['MAIN_TITLE']} !important; font-weight: bold !important; }}
     .remain-title {{ font-size: {FONT_CONFIG['REMAIN_TITLE']} !important; font-weight: bold !important; }}
     [data-testid="stVerticalBlock"] .stCaption div p {{ font-size: {FONT_CONFIG['TABLE_HEADER']} !important; color: #ddd !important; font-weight: 900 !important; }}
+    
+    /* 하단 고정 작업넣기 버튼 (50px 높이) */
     div.stButton > button {{
         position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
         width: 85% !important; max-width: 600px !important; height: 50px !important;
@@ -65,24 +67,27 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if st.query_params.get("action") == "logout":
     st.session_state.logged_in = False; st.query_params.clear(); st.rerun()
 
+# ✅ [수정] 자동 로그인 인식을 위해 autocomplete 속성을 적용한 표준 폼 구조
 if not st.session_state.logged_in:
     _, center_col, _ = st.columns([1, 1.3, 1])
     with center_col:
-        with st.form("login_form"):
+        with st.form("login_form", clear_on_submit=False):
             st.markdown("### 🛡️ 로그인")
-            u_id = st.text_input("ID", placeholder="아이디")
-            u_pw = st.text_input("PW", type="password", placeholder="비밀번호")
+            u_id = st.text_input("ID", placeholder="아이디", autocomplete="username")
+            u_pw = st.text_input("PW", type="password", placeholder="비밀번호", autocomplete="current-password")
             if st.form_submit_button("LOGIN"):
-                client = get_gspread_client()
-                sh = client.open("작업_관리_데이터베이스")
-                acc_sheet = sh.worksheet("Accounts")
-                all_vals = acc_sheet.get_all_values()
-                for row in all_vals[1:]:
-                    if str(row[0]) == u_id and str(row[1]) == u_pw:
-                        st.session_state.logged_in, st.session_state.current_user = True, u_id
-                        st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
-                        st.rerun()
-                st.error("정보 불일치")
+                try:
+                    client = get_gspread_client()
+                    sh = client.open("작업_관리_데이터베이스")
+                    acc_sheet = sh.worksheet("Accounts")
+                    all_vals = acc_sheet.get_all_values()
+                    for row in all_vals[1:]:
+                        if str(row[0]) == u_id and str(row[1]) == u_pw:
+                            st.session_state.logged_in, st.session_state.current_user = True, u_id
+                            st.session_state.nickname = row[5] if len(row) > 5 and row[5].strip() else u_id
+                            st.rerun()
+                    st.error("정보 불일치")
+                except Exception as e: st.error(f"실패: {str(e)}")
 else:
     with st.sidebar:
         st.markdown(f'<div style="display: flex; align-items: center;"><span class="sidebar-id">✅ {st.session_state.nickname}님</span><a href="/?action=logout" target="_self" class="logout-link">LOGOUT</a></div>', unsafe_allow_html=True)
@@ -127,29 +132,25 @@ else:
                     rem_l, rem_r, rem_s = int(user_data[2]), int(user_data[3]), int(user_data[4])
                     
                     if rem_l >= total_l and rem_r >= total_r and rem_s >= total_s:
-                        # 1. 시트 수량 차감 실행 ㅡㅡ
+                        # 1. 수량 차감
                         acc_sheet.update_cell(user_row_idx, 3, rem_l - total_l)
                         acc_sheet.update_cell(user_row_idx, 4, rem_r - total_r)
                         acc_sheet.update_cell(user_row_idx, 5, rem_s - total_s)
 
-                        # ✅ [해결] 2번째 시트("작업") 탭에 데이터 복사 로직 복구 ㅡㅡ
+                        # ✅ [복구] 2번째 시트("작업") 복사 로직
                         target_sh = client.open_by_key("1uqAHj4DoD1RhTsapAXmAB7aOrTQs6FhTIPV4YredoO8")
                         target_ws = target_sh.worksheet("작업")
-
                         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         urls_for_msg = []
                         for d in valid_rows:
-                            # 1번째 시트 History 기록
                             hist_sheet.append_row([now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.current_user, st.session_state.nickname])
-                            # 2번째 시트 "작업" 탭 복사 ㅡㅡ
                             target_ws.append_row(["", "", now, d['kw'], d['url'], d['l'], d['r'], d['s'], st.session_state.nickname])
                             urls_for_msg.append(f"- {d['url']}")
 
-                        # 3. 텔레그램 발송 ㅡㅡ
                         msg = f"🔔 [신규작업]\n{st.session_state.nickname}\n\n" + "\n".join(urls_for_msg) + f"\n\n공{total_l} / 댓{total_r} / 스{total_s}"
                         send_telegram_msg(msg)
                         
-                        st.session_state.form_id += 1 # 입력창 비우기
+                        st.session_state.form_id += 1 
                         st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
-                    else: st.error("❌ 잔여 수량이 부족합니다!")
+                    else: st.error("❌ 잔여 수량 부족!")
     except Exception as e: st.error(f"오류: {e}")
