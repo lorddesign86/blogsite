@@ -177,6 +177,6 @@ else:
                             
                             st.session_state.form_id += 1 
                             st.success("🎊 작업 등록 완료!"); time.sleep(1.2); st.rerun()
-                        else: st.error("❌ 잔여 수량 부족!")
+                        else: st.error("❌ 잔여 수량 부족!, 충전 후 이용해주세요")
                     except Exception as ex: st.error(f"오류: {ex}")
     except Exception as e: st.error(f"동기화 오류: {e}")
